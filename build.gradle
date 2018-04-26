@@ -1,11 +1,12 @@
-group = 'uk.co.froot'
-version = '0.0.1-SNAPSHOT'
-
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: "com.google.protobuf"
+apply plugin: 'com.google.protobuf'
+apply plugin: 'application'
 
+group = 'uk.co.froot'
+version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+mainClassName = 'uk.co.froot.trezorjava.TrezorManager'
 
 buildscript {
   ext {
@@ -17,6 +18,11 @@ buildscript {
   dependencies {
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
   }
+}
+
+run {
+  // Ensure input comes from stdin
+  standardInput = System.in
 }
 
 jar {

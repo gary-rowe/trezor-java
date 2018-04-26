@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+version = '0.0.1-SNAPSHOT'
+
+jar {
+  manifest {
+    attributes 'Implementation-Title': 'Trezor Java',
+      'Implementation-Version': version
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+
+  // usb4java wrapper for libusb-1.0
+  compile group: 'org.usb4java', name: 'usb4java-javax', version: '1.2.0'
+
+  testCompile group: 'junit', name: 'junit', version: '4.+'
+}

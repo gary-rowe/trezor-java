@@ -4,7 +4,8 @@ Integrate Trezor devices into your project using this MIT license library.
 
 ### Project status
 
-Build status: [![Build Status](https://travis-ci.org/gary-rowe/trezor-java.png?branch=master)](https://travis-ci.org/gary-rowe/trezor-java)
+Build status: [![Build Status](https://api.travis-ci.org/gary-rowe/trezor-java.svg?branch=develop)](https://travis-ci.org/gary-rowe/trezor-java#)
+
 Release status: Pre-alpha - use only in a research environment
 
 ### Technologies

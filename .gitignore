@@ -7,6 +7,9 @@ build/
 out/
 lib/
 
+# Protobuf (source files are >5 Mb after generation)
+gen/
+
 # Intellij
 .idea/
 *.iml

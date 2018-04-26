@@ -1,7 +1,23 @@
+group = 'uk.co.froot'
+version = '0.0.1-SNAPSHOT'
+
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: "com.google.protobuf"
 
-version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+buildscript {
+  ext {
+    protobufVersion = '3.5.1'
+  }
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+  }
+}
 
 jar {
   manifest {
@@ -12,12 +28,72 @@ jar {
 
 repositories {
   mavenCentral()
+  mavenLocal()
+}
+
+sourceSets {
+  main {
+    // Set an additional source tree for supplied .proto files
+    proto {
+      srcDir "trezor-common/protob"
+    }
+    // Set an additional source tree for generated protobuf files
+    java {
+      srcDir "gen/main/java"
+    }
+  }
+}
+
+protobuf {
+  // Target for generated code (main/java is appended and it is cleaned on a rebuild so keep it out of src)
+  generatedFilesBaseDir = "$projectDir/gen"
+
+  protoc {
+    artifact = "com.google.protobuf:protoc:$protobufVersion"
+  }
+
+  generateProtoTasks {
+
+    // Ensure all protobuf tasks use generated output correctly
+    all().each { task ->
+      if (task.name == "generateProto") {
+        task.outputs.upToDateWhen {
+          new File(generatedFilesBaseDir).exists()
+        }
+      }
+    }
+
+    // Task to clean generated code
+    task deleteGeneratedProto { doLast {
+        delete generatedFilesBaseDir
+      }
+    }
+
+    // Task to recompile protobuf sources
+    task recompileProto {}
+    recompileProto.dependsOn(deleteGeneratedProto)
+    recompileProto.dependsOn(generateProto)
+
+    // Java compilation should happen after protobuf sources are generated
+    compileJava.dependsOn(generateProto)
+
+    // Clean task should remove generated code
+    clean.dependsOn(deleteGeneratedProto)
+  }
+
 }
 
 dependencies {
 
-  // usb4java wrapper for libusb-1.0
-  compile group: 'org.usb4java', name: 'usb4java-javax', version: '1.2.0'
+  // USB (wrapper for libusb-1.0 with javax.usb extensions)
+  compile "org.usb4java:usb4java-javax:1.2.0"
 
-  testCompile group: 'junit', name: 'junit', version: '4.+'
+  // Google protobuf for serialisation on the wire
+  compile "com.google.protobuf:protobuf-java:$protobufVersion"
+
+  // Logging with slf4j
+  compile "org.slf4j:slf4j-api:1.7.25"
+
+  // Testing with junit
+  testCompile "junit:junit:4.+"
 }

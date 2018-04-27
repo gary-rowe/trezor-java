@@ -68,12 +68,11 @@ the protobuf files. See the "Updating protobuf files" section later.
 Satoshi Labs (creators of the Trezor device) maintain the `.proto` files. As changes are reported this project will update their protobuf files through the following process: 
 
 ```bash
-cd trezor/src/main/trezor-common
+cd trezor-common
 git checkout master
 git pull origin master
-cd ../../..
-./gradlew -DupdateProtobuf=true clean compile
 cd ..
+./gradlew clean build
 git add trezor-common
 git commit -m "Updating protobuf files for 'trezor-common'"
 git push
@@ -82,13 +81,17 @@ git push
 Normally the HEAD of the submodule origin `master` branch is [the latest production release](http://nvie.com/posts/a-successful-git-branching-model/), but that's 
 up to the owner of the upstream repo.
 
+The generated source of the protobuf files are not held in version control. This is because they are derived resources and can run into several megabytes of code
+that are likely to never be reviewed by a developer. This only serves to bloat the upstream repository to no advantage.
+
 ### Troubleshooting
 
 The following are known issues and their solutions or workarounds.
 
 #### I'm seeing `Device not connected` in the logs
 
-Check that you don't have an open browser window to myTrezor.com or perhaps another application that is holding a connection to the device open. 
+Check that you don't have an open browser window to [Trezor.io](https://trezor.io) or perhaps another application that is holding a connection to the device open
+through the Trezor Bridge and WebUSB.. 
 
 ### Closing notes
 

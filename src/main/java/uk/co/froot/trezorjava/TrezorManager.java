@@ -1,66 +1,40 @@
 package uk.co.froot.trezorjava;
 
-import org.usb4java.*;
-import uk.co.froot.trezorjava.events.UsbEventHandlerThread;
-import uk.co.froot.trezorjava.events.UsbHotplugCallback;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.usb4java.DeviceDescriptor;
+import org.usb4java.DeviceHandle;
+import org.usb4java.LibUsb;
+import org.usb4java.LibUsbException;
 
 /**
  * Manager class to provide the following:
  *
  * Access to the top level Trezor API.
- *
  */
-public class TrezorManager
-{
+public class TrezorManager {
+
+  private static final Logger log = LoggerFactory.getLogger(TrezorManager.class);
+
+  private static final int TREZOR_INTERFACE = 0;
+
+  /**
+   * The Trezor device.
+   */
+  private TrezorDevice trezorDevice = null;
 
   /**
    * TrezorManager method.
    *
-   * @param args
-   *            Command-line arguments (Ignored)
-   * @throws Exception
-   *             When something goes wrong.
+   * @throws LibUsbException If something goes wrong.
    */
-  public static void main(String[] args) throws Exception
-  {
+  public void initialise() throws LibUsbException {
+
     initLibUsb();
-    int result;
 
+    tryGetDevice();
 
-    // Start the event handling thread
-    UsbEventHandlerThread thread = new UsbEventHandlerThread();
-    thread.start();
-
-    // Register the hotplug callback
-    HotplugCallbackHandle callbackHandle = new HotplugCallbackHandle();
-    result = LibUsb.hotplugRegisterCallback(null,
-      LibUsb.HOTPLUG_EVENT_DEVICE_ARRIVED
-        | LibUsb.HOTPLUG_EVENT_DEVICE_LEFT,
-      LibUsb.HOTPLUG_ENUMERATE,
-      LibUsb.HOTPLUG_MATCH_ANY,
-      LibUsb.HOTPLUG_MATCH_ANY,
-      LibUsb.HOTPLUG_MATCH_ANY,
-      new UsbHotplugCallback(),
-      null,
-      callbackHandle
-    );
-    if (result != LibUsb.SUCCESS)
-    {
-      throw new LibUsbException("Unable to register hotplug callback",
-        result);
-    }
-
-    // Our faked application. Hit enter key to exit the application.
-    System.out.println("Hit enter to exit the demo");
-    System.in.read();
-
-    // Unregister the hotplug callback and stop the event handling thread
-    thread.abort();
-    LibUsb.hotplugDeregisterCallback(null, callbackHandle);
-    thread.join();
-
-    // Deinitialize the libusb context
-    LibUsb.exit(null);
   }
 
   /**
@@ -68,16 +42,90 @@ public class TrezorManager
    */
   private static void initLibUsb() {
 
+    log.debug("Initialising libusb...");
+
     int result = LibUsb.init(null);
-    if (result != LibUsb.SUCCESS)
-    {
+    if (result != LibUsb.SUCCESS) {
       throw new LibUsbException("Unable to initialize libusb.", result);
     }
 
-    // Require hotplug capability
-    if (!LibUsb.hasCapability(LibUsb.CAP_HAS_HOTPLUG))
-    {
-      throw new LibUsbException("Unable to register hotplug callback (not supported).", LibUsb.ERROR_NOT_SUPPORTED);
-    }
   }
+
+  /**
+   * @param descriptor The USB device descriptor.
+   *
+   * @return True if this is a recognised Trezor device.
+   */
+  private boolean isTrezorDevice(DeviceDescriptor descriptor) {
+
+    if (descriptor.idVendor() == 0x534c && descriptor.idProduct() == 0x0001) {
+      log.debug("Found Trezor V1");
+      return true;
+    }
+
+    // TREZOR v2
+    if (descriptor.idVendor() == 0x1209 && descriptor.idProduct() == 0x53c0 || descriptor.idProduct() == 0x53c1) {
+      log.debug("Found Trezor V2");
+      return true;
+    }
+
+    // Must have failed to be here
+    return false;
+  }
+
+  private synchronized boolean tryConnectDevice() {
+    return tryGetDevice() != null;
+  }
+
+  /**
+   * Try to get a Trezor device.
+   *
+   * @return A USB device if a Trezor is detected or null.
+   */
+  private TrezorDevice tryGetDevice() {
+
+    if (trezorDevice == null) {
+      log.debug("Finding Trezor in device list...");
+
+      // Open the device
+      DeviceHandle handle = LibUsb.openDeviceWithVidPid(
+        null,
+        (short) 0x1209,
+        (short) 0x53c1
+      );
+      if (handle == null) {
+        log.error("Test device not found.");
+        return null;
+      }
+
+      // Claim interface
+      int result = LibUsb.claimInterface(handle, TREZOR_INTERFACE);
+      if (result != LibUsb.SUCCESS) {
+        throw new LibUsbException("Unable to claim interface", result);
+      }
+
+      // Must have a Trezor device to be here
+      log.info("Trezor device interfaces verified.");
+      trezorDevice = new TrezorDevice(handle);
+
+      return trezorDevice;
+
+    } else {
+      log.info("Using already connected device.");
+      return trezorDevice;
+
+    }
+
+  }
+
+  public void sendPing() {
+    TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
+    trezorDevice.sendMessage(message);
+  }
+
+  public void sendInitialize() {
+    TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
+    trezorDevice.sendMessage(message);
+  }
+
 }

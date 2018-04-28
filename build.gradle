@@ -6,7 +6,7 @@ apply plugin: 'application'
 group = 'uk.co.froot'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
-mainClassName = 'uk.co.froot.trezorjava.TrezorManager'
+mainClassName = 'uk.co.froot.trezorjava.Main'
 
 buildscript {
   ext {

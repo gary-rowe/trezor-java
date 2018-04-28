@@ -1,5 +1,8 @@
 package uk.co.froot.trezorjava;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import org.usb4java.LibUsb;
 import uk.co.froot.trezorjava.utils.ConsoleUtils;
 
@@ -38,7 +41,14 @@ public class Main {
 //      }
 //    }
 
-    trezorManager.sendPing();
+    try {
+      Message response = trezorManager.sendPing();
+      if (response instanceof TrezorMessage.Success) {
+        System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + " Message:" + ((TrezorMessage.Success) response).getMessage());
+      }
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
 
     // Clean up libusb resources
     LibUsb.exit(null);
@@ -50,17 +60,13 @@ public class Main {
    *
    * @return The read key.
    */
-  private static char readKey()
-  {
-    try
-    {
+  private static char readKey() {
+    try {
       String line =
         new BufferedReader(new InputStreamReader(System.in)).readLine();
       if (line.length() > 0) return line.charAt(0);
       return 0;
-    }
-    catch (IOException e)
-    {
+    } catch (IOException e) {
       throw new RuntimeException("Unable to read key", e);
     }
   }

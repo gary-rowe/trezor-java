@@ -1,5 +1,7 @@
 package uk.co.froot.trezorjava;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,14 +120,14 @@ public class TrezorManager {
 
   }
 
-  public void sendPing() {
+  public Message sendPing() throws InvalidProtocolBufferException {
     TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
-    trezorDevice.sendMessage(message);
+    return trezorDevice.sendMessage(message);
   }
 
-  public void sendInitialize() {
+  public Message sendInitialize() throws InvalidProtocolBufferException {
     TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
-    trezorDevice.sendMessage(message);
+    return trezorDevice.sendMessage(message);
   }
 
 }

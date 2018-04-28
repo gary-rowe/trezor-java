@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import static uk.co.froot.trezorjava.utils.ConsoleUtils.formatBytesAsHex;
 
@@ -53,7 +54,7 @@ public class TrezorDevice {
    *
    * @return The decoded protobuf message given in response.
    */
-  public Message sendMessage(Message message) {
+  public Message sendMessage(Message message) throws InvalidProtocolBufferException {
     if (deviceHandle == null)
       throw new IllegalStateException("sendMessage: usbConnection already closed, cannot send message");
 
@@ -148,63 +149,130 @@ public class TrezorDevice {
 
   }
 
-  private Message messageRead() {
+  private Message messageRead() throws InvalidProtocolBufferException {
 
-    ByteBuffer data = BufferUtils
-      .allocateByteBuffer(64)
-      .order(ByteOrder.LITTLE_ENDIAN);
+    ByteBuffer messageBuffer;
+    TrezorMessage.MessageType messageType;
+    int invalidChunksCounter = 0;
 
-    IntBuffer transferred = BufferUtils.allocateIntBuffer();
+    int msgId;
+    int msgSize;
 
-    int result = LibUsb.bulkTransfer(
-      deviceHandle,
-      IN_ENDPOINT,
-      data,
-      transferred,
-      TIMEOUT
-    );
-    if (result != LibUsb.SUCCESS) {
-      throw new LibUsbException("Unable to read data", result);
+    // Start by attempting to read the first chunk
+    // with the assumption that the read buffer initially
+    // contains random data and needs to be synch'd up
+    for (; ; ) {
+      ByteBuffer chunkBuffer = BufferUtils
+        .allocateByteBuffer(64)
+        .order(ByteOrder.LITTLE_ENDIAN);
+      IntBuffer transferred = BufferUtils.allocateIntBuffer();
+
+      int result = LibUsb.bulkTransfer(
+        deviceHandle,
+        IN_ENDPOINT,
+        chunkBuffer,
+        transferred,
+        TIMEOUT
+      );
+      if (result != LibUsb.SUCCESS) {
+        throw new LibUsbException("Unable to read data", result);
+      }
+      log.debug("< {} bytes read from device.", transferred.get());
+
+      // Extract the chunk
+      byte[] readBytes = new byte[chunkBuffer.remaining()];
+      chunkBuffer.get(readBytes);
+
+      // Only perform byte presentation if debug is enabled
+      if (log.isDebugEnabled()) {
+        log.debug("\n>{}", ConsoleUtils.formatBytesAsHex(readBytes));
+      }
+
+      // Check for invalid header length
+      if (readBytes.length < 9) {
+        if (invalidChunksCounter++ > 5) {
+          throw new InvalidProtocolBufferException("Header too short after multiple chunks");
+        }
+        // Restart the loop
+        continue;
+      }
+
+      // Check for invalid header sync pattern
+      if (readBytes[0] != (byte) '?'
+        || readBytes[1] != (byte) '#'
+        || readBytes[2] != (byte) '#') {
+        if (invalidChunksCounter++ > 5) {
+          throw new InvalidProtocolBufferException("Header invalid after multiple chunks");
+        }
+        // Restart the loop
+        continue;
+      }
+
+      // Must be OK to be here
+      msgId = (((int) readBytes[3] & 0xFF) << 8) + ((int) readBytes[4] & 0xFF);
+      msgSize = (((int) readBytes[5] & 0xFF) << 24)
+        + (((int) readBytes[6] & 0xFF) << 16)
+        + (((int) readBytes[7] & 0xFF) << 8)
+        + ((int) readBytes[8] & 0xFF);
+
+      // Allocate the message payload buffer
+      messageBuffer = ByteBuffer.allocate(msgSize + 1024);
+      messageBuffer.put(readBytes, 9, readBytes.length - 9);
+      messageType = TrezorMessage.MessageType.valueOf(msgId);
+      break;
     }
-    log.debug("< {} bytes read from device.", transferred.get());
 
-    // Only perform byte presentation if debug is enabled
-    if (log.isDebugEnabled()) {
-      byte[] readBytes = new byte[data.remaining()];
-      data.get(readBytes);
-      log.debug("\n>{}", ConsoleUtils.formatBytesAsHex(readBytes));
+    // Read in the remaining payload data
+    invalidChunksCounter = 0;
+
+    while (messageBuffer.position() < msgSize) {
+      ByteBuffer chunkBuffer = BufferUtils
+        .allocateByteBuffer(64)
+        .order(ByteOrder.LITTLE_ENDIAN);
+      IntBuffer transferred = BufferUtils.allocateIntBuffer();
+
+      int result = LibUsb.bulkTransfer(
+        deviceHandle,
+        IN_ENDPOINT,
+        chunkBuffer,
+        transferred,
+        TIMEOUT
+      );
+      if (result != LibUsb.SUCCESS) {
+        throw new LibUsbException("Unable to read data", result);
+      }
+      log.debug("< {} bytes read from device.", transferred.get());
+
+      // Extract the chunk
+      byte[] readBytes = new byte[chunkBuffer.remaining()];
+      chunkBuffer.get(readBytes);
+
+      // Sanity check on the chunk
+      if (readBytes[0] != (byte) '?') {
+        // Unexpected value in the first position - should be 63
+        if (invalidChunksCounter++ > 5)
+          throw new InvalidProtocolBufferException("Chunk invalid in payload");
+        continue;
+      }
+      messageBuffer.put(readBytes, 1, readBytes.length - 1);
     }
 
-    // TODO Perform
+    byte[] msgData = Arrays.copyOfRange(messageBuffer.array(), 0, msgSize);
 
-    // TODO Decode into a protobuf message
+    log.info("Parsing type {} ({} bytes):", messageType, msgData.length);
 
-    return null;
-  }
-
-  /**
-   * Parse a message from the raw bytes from the device.
-   *
-   * @param type The message type
-   * @param data The raw bytes
-   *
-   * @return The decoded protobuf message.
-   *
-   * @throws InvalidProtocolBufferException If something goes wrong.
-   */
-  public Message parseMessageFromBytes(TrezorMessage.MessageType type, byte[] data) throws InvalidProtocolBufferException {
     try {
-      String className = TrezorMessage.class.getName() + "$" + type.name().replace("MessageType_", "");
+      String className = TrezorMessage.class.getName() + "$" + messageType.name().replace("MessageType_", "");
       Class cls = Class.forName(className);
       Method method = cls.getDeclaredMethod("parseFrom", byte[].class);
       //noinspection PrimitiveArrayArgumentToVariableArgMethod
-      return (Message) method.invoke(null, data); // TODO cache methods for faster start?
-    } catch (Exception ex) {
-      throw new InvalidProtocolBufferException("Exception while calling: parseMessageFromBytes for MessageType: " + type.name());
+      return (Message)method.invoke(null, msgData);
+    }
+    catch (Exception ex) {
+      throw new InvalidProtocolBufferException("Exception while calling: parseMessageFromBytes for MessageType: " + messageType.name());
     }
 
   }
-
 
 }
 

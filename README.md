@@ -22,14 +22,16 @@ TODO
 
 ### Getting started
 
-This project uses gradle and can be used without having external hardware attached. Gradle comes with a 
+This project uses gradle (compatible with Maven) and will "self-install" at the project level if not already 
+present on your machine. Before starting it is necessary to perform an initial build to generate the protobuf
+source code files. Simply do the following:
 
 ```
 $ cd <project directory>
 $ ./gradlew clean build
 ```
 
-and you're good to go. Your next step is to explore the examples (see later for details).
+and you're good to go. If you encounter problems, perhaps with compilation within an IDE, please review the Troubleshooting section below.
 
 ### Frequently asked questions (FAQ)
 
@@ -37,6 +39,7 @@ and you're good to go. Your next step is to explore the examples (see later for 
 
 At present there is support and examples for the following high level use cases:
 
+* Ping with custom message - Done
 * Attachment/detachment detection - TODO
 * Wipe device to factory settings - TODO
 * Load wallet with known seed phrase (insecure) - TODO

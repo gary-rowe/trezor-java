@@ -41,11 +41,11 @@ sourceSets {
   main {
     // Set an additional source tree for supplied .proto files
     proto {
-      srcDir "trezor-common/protob"
+      srcDir "$projectDir/trezor-common/protob"
     }
     // Set an additional source tree for generated protobuf files
     java {
-      srcDir "gen/main/java"
+      srcDirs "$projectDir/gen/main/java"
     }
   }
 }
@@ -97,8 +97,9 @@ dependencies {
   // Google protobuf for serialisation on the wire
   compile "com.google.protobuf:protobuf-java:$protobufVersion"
 
-  // Logging with slf4j
+  // Logging with slf4j and logback
   compile "org.slf4j:slf4j-api:1.7.25"
+  compile "ch.qos.logback:logback-classic:1.+"
 
   // Testing with junit
   testCompile "junit:junit:4.+"

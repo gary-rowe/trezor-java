@@ -93,6 +93,26 @@ The following are known issues and their solutions or workarounds.
 Check that you don't have an open browser window to [Trezor.io](https://trezor.io) or perhaps another application that is holding a connection to the device open
 through the Trezor Bridge and WebUSB.. 
 
+#### Intellij doesn't import generated protobuf files like `TrezorManager`
+
+This [Stackoverflow answer](https://stackoverflow.com/a/47411405/396747) provides good instructions:
+
+```text
+
+In IntelliJ IDEA 2016 and newer you can change this setting in Help > Edit Custom Properties.
+
+On older versions, there's no GUI to do it. But you can change it if you edit the IntelliJ IDEA Platform Properties file as described here: https://intellij-support.jetbrains.com/hc/en-us/articles/206544869-Configuring-JVM-options-and-platform-properties
+
+# Maximum file size (kilobytes) IDE should provide code assistance for.
+idea.max.intellisense.filesize=50000
+
+# Maximum file size (kilobytes) IDE is able to open.
+idea.max.content.load.filesize=50000
+
+Don't forget to save and restart IntelliJ IDEA.
+
+```
+
 ### Closing notes
 
 All trademarks and copyrights are acknowledged.

@@ -12,6 +12,7 @@ Release status: Pre-alpha - use only in a research environment
 
 * [usb4java](https://github.com/usb4java/usb4java) - Java library wrapping `libusb-1.0` for non-HID interfaces
 * [Google Protocol Buffers](https://code.google.com/p/protobuf/) (protobuf) - for the most efficient and flexible wire protocol
+* [Trezor Common](https://github.com/trezor/trezor-common) - for the protobuf code generation
 * Java 8+ - to remove dependencies on JVMs that have reached end of life
 
 ### Code examples
@@ -80,14 +81,14 @@ the protobuf files. See the "Updating protobuf files" section later.
 Satoshi Labs (creators of the Trezor device) maintain the `.proto` files. As changes are reported this project will update their protobuf files through the following process: 
 
 ```bash
-cd core/trezor-common
-git checkout master
-git pull origin master
-cd ../..
-./gradlew clean build
-git add trezor-common
-git commit -m "Updating protobuf files for 'trezor-common'"
-git push
+$ cd <project directory>/core/trezor-common
+$ git checkout master
+$ git pull origin master
+$ cd ../..
+$ ./gradlew clean build
+$ git add core/trezor-common
+$ git commit -m "Updating protobuf files for 'trezor-common'"
+$ git push
 ```
 
 Normally the HEAD of the submodule origin `master` branch is [the latest production release](http://nvie.com/posts/a-successful-git-branching-model/), but that's 

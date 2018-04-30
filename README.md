@@ -35,7 +35,16 @@ and you're good to go. If you encounter problems, perhaps with compilation withi
 
 ### Frequently asked questions (FAQ)
 
-#### What use cases do you support ?
+#### Which module should I use?
+
+The `core` module is for low level access to the Trezor device. Essentially just basic message passing with no context or use
+case in mind. Use this if you already have a service layer for your project and just want to communicate with a Trezor
+with the bare minimum of dependencies.
+
+The `service` module is for high level access to the Trezor device. It contains a collection of simple entry points that cover many 
+common use cases for the Trezor device. Use this if you are integrating the Trezor device into an existing project.
+
+#### What use cases do you support?
 
 At present there is support and examples for the following high level use cases:
 
@@ -61,7 +70,7 @@ If you are a collaborator (i.e. you have commit access to the repo) then you wil
 the correct version of the protobuf files:
 
 ```
-$ cd <project directory>
+$ cd <project directory>/core
 $ git submodule init
 $ git submodule update
 ```

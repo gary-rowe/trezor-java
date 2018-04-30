@@ -41,7 +41,11 @@ subprojects {
     compile "ch.qos.logback:logback-classic:1.+"
 
     // Testing with junit
-    testCompile "junit:junit:4.+"
+    testCompile "junit:junit:4.4"
+
+    // Mockito for mocking
+    testCompile "org.mockito:mockito-core:2.18.3"
+
   }
 
 }
@@ -120,6 +124,8 @@ project(':service') {
   dependencies {
 
     compile project(':core')
+
+
 
   }
 

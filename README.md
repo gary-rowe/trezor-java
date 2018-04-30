@@ -71,10 +71,10 @@ the protobuf files. See the "Updating protobuf files" section later.
 Satoshi Labs (creators of the Trezor device) maintain the `.proto` files. As changes are reported this project will update their protobuf files through the following process: 
 
 ```bash
-cd trezor-common
+cd core/trezor-common
 git checkout master
 git pull origin master
-cd ..
+cd ../..
 ./gradlew clean build
 git add trezor-common
 git commit -m "Updating protobuf files for 'trezor-common'"

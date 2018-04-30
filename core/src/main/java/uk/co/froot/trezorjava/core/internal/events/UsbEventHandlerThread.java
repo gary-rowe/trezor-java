@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.internal.events;
+package uk.co.froot.trezorjava.core.internal.events;
 
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;

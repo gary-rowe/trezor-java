@@ -1,10 +1,10 @@
-package uk.co.froot.trezorjava;
+package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import org.usb4java.LibUsb;
-import uk.co.froot.trezorjava.utils.ConsoleUtils;
+import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

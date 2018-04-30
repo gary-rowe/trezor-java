@@ -8,7 +8,7 @@ out/
 lib/
 
 # Protobuf (source files are >5 Mb after generation)
-gen/
+core/gen/
 
 # Intellij
 .idea/

@@ -1,7 +1,7 @@
 package uk.co.froot.trezorjava;
 
 import org.junit.Test;
-import uk.co.froot.trezorjava.utils.ConsoleUtils;
+import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
 import static junit.framework.TestCase.assertEquals;
 

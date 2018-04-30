@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.internal;
+package uk.co.froot.trezorjava.core.internal;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
@@ -9,7 +9,7 @@ import org.usb4java.BufferUtils;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
-import uk.co.froot.trezorjava.utils.ConsoleUtils;
+import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -17,7 +17,7 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 
-import static uk.co.froot.trezorjava.utils.ConsoleUtils.formatBytesAsHex;
+import static uk.co.froot.trezorjava.core.utils.ConsoleUtils.formatBytesAsHex;
 
 public class TrezorDevice {
 

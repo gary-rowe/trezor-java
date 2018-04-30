@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava;
+package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
@@ -9,7 +9,7 @@ import org.usb4java.DeviceDescriptor;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
-import uk.co.froot.trezorjava.internal.TrezorDevice;
+import uk.co.froot.trezorjava.core.internal.TrezorDevice;
 
 /**
  * Manager class to provide the following:

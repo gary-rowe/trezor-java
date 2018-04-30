@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.utils;
+package uk.co.froot.trezorjava.core.utils;
 
 public class ConsoleUtils {
 

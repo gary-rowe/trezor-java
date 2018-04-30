@@ -9,6 +9,7 @@ import org.usb4java.DeviceDescriptor;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
+import uk.co.froot.trezorjava.internal.TrezorDevice;
 
 /**
  * Manager class to provide the following:

@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava;
+package uk.co.froot.trezorjava.internal;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;

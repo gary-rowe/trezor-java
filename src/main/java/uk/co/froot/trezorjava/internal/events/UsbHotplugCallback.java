@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.events;
+package uk.co.froot.trezorjava.internal.events;
 
 import org.usb4java.*;
 

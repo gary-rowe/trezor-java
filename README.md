@@ -23,16 +23,28 @@ TODO
 
 ### Getting started
 
+#### Building locally
+
 This project uses gradle (compatible with Maven) and will "self-install" at the project level if not already 
 present on your machine. Before starting it is necessary to perform an initial build to generate the protobuf
 source code files. Simply do the following:
 
-```
+```bash
 $ cd <project directory>
 $ ./gradlew clean build
 ```
 
 and you're good to go. If you encounter problems, perhaps with compilation within an IDE, please review the Troubleshooting section below.
+
+#### Run with an attached device
+
+Each module has a simple command line interface to allow exercising attached devices. Access these as follows:
+
+```bash
+$ cd <project directory>
+$ ./gradlew :core:run
+$ ./gradlew :service:run
+```
 
 ### Frequently asked questions (FAQ)
 
@@ -45,12 +57,52 @@ with the bare minimum of dependencies.
 The `service` module is for high level access to the Trezor device. It contains a collection of simple entry points that cover many 
 common use cases for the Trezor device. Use this if you are integrating the Trezor device into an existing project.
 
+#### How do I include this in my project?
+
+Maven Central is your friend here. Note that `service` will include `core`. 
+
+Maven:
+```xml
+<dependencies>
+  <1-- Core is included in Service -->
+  <dependency>
+    <groupId>uk.co.froot.trezorjava</groupId>
+    <artifactId>core</artifactId>
+    <version>0.0.1</version>
+  </dependency>
+  <dependency>
+    <groupId>uk.co.froot.trezorjava</groupId>
+    <artifactId>service</artifactId>
+    <version>0.0.1</version>
+  </dependency>
+</dependencies>
+
+```
+
+Gradle:
+```groovy
+dependencies {
+
+  // Core is included in service
+  compile "uk.co.froot.trezorjava:core:0.0.1"
+  compile "uk.co.froot.trezorjava:service:0.0.1"
+
+}
+```
+
 #### What use cases do you support?
 
 At present there is support and examples for the following high level use cases:
 
-* Ping with custom message - Done
-* Attachment/detachment detection - TODO
+`core` module
+
+* Open attached Trezor Model T device - Done
+* Send/receive protobuf messages to attached device - Done
+
+`service` - module
+
+* Process device events (attachment, button press etc) - TODO
+* Hotplug attachment/detachment detection - TODO
 * Wipe device to factory settings - TODO
 * Load wallet with known seed phrase (insecure) - TODO
 * Create wallet on device with PIN and external entropy (secure) - TODO

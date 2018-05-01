@@ -4,11 +4,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.usb4java.DeviceDescriptor;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
 import uk.co.froot.trezorjava.core.internal.TrezorDevice;
+
+import javax.usb.UsbDeviceDescriptor;
+import javax.usb.UsbException;
+import javax.usb.UsbHostManager;
+import javax.usb.UsbServices;
+import javax.usb.event.UsbServicesEvent;
+import javax.usb.event.UsbServicesListener;
+
+import static uk.co.froot.trezorjava.core.TrezorType.*;
 
 /**
  * Manager class to provide the following:
@@ -27,15 +35,31 @@ public class TrezorManager {
   private TrezorDevice trezorDevice = null;
 
   /**
-   * TrezorManager method.
+   * The USB services.
+   */
+  private final UsbServices usbServices;
+
+  /**
+   * The callback handler.
+   */
+  private final TrezorEventHandler trezorEventHandler;
+
+  /**
+   * Creates the manager wrapper for the device and initialises appropriate USB libraries.
+   * Ensure you close the manager to release resources.
+   *
+   * @param trezorEventHandler The TrezorEvent handler.
    *
    * @throws LibUsbException If something goes wrong.
    */
-  public void initialise() throws LibUsbException {
+  public TrezorManager(DefaultTrezorEventHandler trezorEventHandler) throws LibUsbException, UsbException {
+
+    this.trezorEventHandler = trezorEventHandler;
+    this.usbServices = UsbHostManager.getUsbServices();
 
     initLibUsb();
 
-    tryGetDevice();
+    initUsbListener(trezorEventHandler);
 
   }
 
@@ -51,13 +75,70 @@ public class TrezorManager {
    * @throws InvalidProtocolBufferException If something goes wrong.
    */
   public Message sendMessage(Message message) throws InvalidProtocolBufferException {
+
+    // Fail fast
+    if (trezorDevice == null) {
+      log.warn("Device is not present");
+      return null;
+    }
+
     return trezorDevice.sendMessage(message);
+  }
+
+  /**
+   * Clean up libusb resources.
+   */
+  public void close() {
+    LibUsb.exit(null);
+  }
+
+  /**
+   * Initialise the USB listener.
+   *
+   * @param trezorEventHandler The Trezor event handler.
+   *
+   * @throws UsbException If something goes wrong.
+   */
+  private void initUsbListener(DefaultTrezorEventHandler trezorEventHandler) throws UsbException {
+    usbServices.addUsbServicesListener(new UsbServicesListener() {
+
+      public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
+
+        // Obtain the descriptor
+        UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
+
+        // Attempt to identify the device
+        TrezorType trezorType = identifyTrezorDevice(descriptor);
+
+        // Attempt to open the device
+        if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
+          // Issue a callback
+          trezorEventHandler.handleDeviceAttached(trezorType, descriptor);
+        }
+      }
+
+      public void usbDeviceDetached(UsbServicesEvent usbServicesEvent) {
+
+        // Obtain the descriptor
+        UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
+
+        // Attempt to identify the device
+        TrezorType trezorType = identifyTrezorDevice(descriptor);
+
+        // Remove the device from management
+        trezorDevice.close();
+        trezorDevice = null;
+
+        // Issue a callback
+        trezorEventHandler.handleDeviceDetached(trezorType, descriptor);
+      }
+    });
   }
 
   /**
    * Initialise libusb context.
    */
-  private static void initLibUsb() {
+  private void initLibUsb() {
 
     log.debug("Initialising libusb...");
 
@@ -73,67 +154,64 @@ public class TrezorManager {
    *
    * @return True if this is a recognised Trezor device.
    */
-  private boolean isTrezorDevice(DeviceDescriptor descriptor) {
+  private TrezorType identifyTrezorDevice(UsbDeviceDescriptor descriptor) {
 
     if (descriptor.idVendor() == 0x534c && descriptor.idProduct() == 0x0001) {
-      log.debug("Found Trezor V1");
-      return true;
+      return V1;
     }
 
-    // TREZOR v2
-    if (descriptor.idVendor() == 0x1209 && descriptor.idProduct() == 0x53c0 || descriptor.idProduct() == 0x53c1) {
-      log.debug("Found Trezor V2");
-      return true;
+    // TREZOR V2 (Model T) - factory issue
+    if (descriptor.idVendor() == 0x1209 && descriptor.idProduct() == 0x53c0) {
+      return V2_FACTORY;
+    }
+
+    // TREZOR V2 (Model T) - firmware installed
+    if (descriptor.idVendor() == 0x1209 && descriptor.idProduct() == 0x53c1) {
+      return V2;
     }
 
     // Must have failed to be here
-    return false;
-  }
-
-  private synchronized boolean tryConnectDevice() {
-    return tryGetDevice() != null;
+    return UNKNOWN;
   }
 
   /**
    * Try to get a Trezor device.
    *
-   * @return A USB device if a Trezor is detected or null.
+   * @param trezorType The Trezor type inferred from the vid and pid (e.g. "V2").
+   * @param vid        The vendor ID.
+   * @param pid        The product ID.
    */
-  private TrezorDevice tryGetDevice() {
+  private boolean tryOpenDevice(TrezorType trezorType, short vid, short pid) {
 
-    if (trezorDevice == null) {
-      log.debug("Finding Trezor in device list...");
-
-      // Open the device
-      DeviceHandle handle = LibUsb.openDeviceWithVidPid(
-        null,
-        (short) 0x1209,
-        (short) 0x53c1
-      );
-      if (handle == null) {
-        log.error("Test device not found.");
-        return null;
-      }
-
-      // Claim interface
-      int result = LibUsb.claimInterface(handle, TREZOR_INTERFACE);
-      if (result != LibUsb.SUCCESS) {
-        throw new LibUsbException("Unable to claim interface", result);
-      }
-
-      // Must have a Trezor device to be here
-      log.info("Trezor device interfaces verified.");
-      trezorDevice = new TrezorDevice(handle);
-
-      return trezorDevice;
-
-    } else {
-      log.info("Using already connected device.");
-      return trezorDevice;
-
+    if (trezorType == UNKNOWN) {
+      return false;
     }
 
+    try {
+      openUsbDevice(vid, pid);
+    } catch (LibUsbException e) {
+      log.warn("Unable to open device", e);
+      return false;
+    }
+
+    return true;
   }
 
+  private void openUsbDevice(short vid, short pid) {
+    // Attempt to open the device
+    DeviceHandle handle = LibUsb.openDeviceWithVidPid(null, vid, pid);
+    if (handle == null) {
+      throw new LibUsbException("Device not found ", LibUsb.ERROR_NOT_FOUND);
+    }
+
+    // Claim interface
+    int result = LibUsb.claimInterface(handle, TREZOR_INTERFACE);
+    if (result != LibUsb.SUCCESS) {
+      throw new LibUsbException("Unable to claim interface.", result);
+    }
+
+    // Must have a Trezor device to be here
+    trezorDevice = new TrezorDevice(handle);
+  }
 
 }

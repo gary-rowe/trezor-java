@@ -4,19 +4,18 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import com.satoshilabs.trezor.lib.protobuf.TrezorType;
-import org.usb4java.LibUsb;
 import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
+import javax.usb.UsbException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Main {
 
-  public static void main(String[] args) throws InvalidProtocolBufferException {
+  public static void main(String[] args) throws InvalidProtocolBufferException, UsbException {
 
-    TrezorManager trezorManager = new TrezorManager();
-    trezorManager.initialise();
+    TrezorManager trezorManager = new TrezorManager(new DefaultTrezorEventHandler());
 
     // Read commands and execute them
     System.out.println(ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.");
@@ -76,8 +75,8 @@ public class Main {
 
     }
 
-    // Clean up libusb resources
-    LibUsb.exit(null);
+    // Clean up resources
+    trezorManager.close();
 
   }
 

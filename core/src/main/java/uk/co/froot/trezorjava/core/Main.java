@@ -37,9 +37,6 @@ public class Main {
         case '1':
           response = sendPing(trezorManager);
           break;
-        case '2':
-          response = sendFeatures(trezorManager);
-          break;
         case 'h':
           System.out.println("Menu");
           System.out.println("0 - Send Initialize");
@@ -103,11 +100,6 @@ public class Main {
 
   private static Message sendPing(TrezorManager trezorManager) throws InvalidProtocolBufferException {
     TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
-    return trezorManager.sendMessage(message);
-  }
-
-  private static Message sendFeatures(TrezorManager trezorManager) throws InvalidProtocolBufferException {
-    TrezorMessage.Features message = TrezorMessage.Features.newBuilder().build();
     return trezorManager.sendMessage(message);
   }
 

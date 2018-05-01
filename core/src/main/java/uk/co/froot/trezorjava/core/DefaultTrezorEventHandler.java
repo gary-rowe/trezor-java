@@ -11,11 +11,9 @@ public class DefaultTrezorEventHandler implements TrezorEventHandler {
 
   @Override
   public void handleDeviceAttached(TrezorType trezorType, UsbDeviceDescriptor descriptor) {
-    log.info("Device attached: {}", trezorType);
   }
 
   @Override
   public void handleDeviceDetached(TrezorType trezorType, UsbDeviceDescriptor descriptor) {
-    log.info("Device detached: {}", trezorType);
   }
 }

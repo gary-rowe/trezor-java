@@ -110,10 +110,14 @@ public class TrezorManager {
         // Attempt to identify the device
         TrezorType trezorType = identifyTrezorDevice(descriptor);
 
-        // Attempt to open the device
-        if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
-          // Issue a callback
-          trezorEventHandler.handleDeviceAttached(trezorType, descriptor);
+        if (trezorType != UNKNOWN) {
+          log.debug("Device attached: {}", trezorType);
+
+          // Attempt to open the device
+          if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
+            // Issue a callback
+            trezorEventHandler.handleDeviceAttached(trezorType, descriptor);
+          }
         }
       }
 
@@ -125,12 +129,18 @@ public class TrezorManager {
         // Attempt to identify the device
         TrezorType trezorType = identifyTrezorDevice(descriptor);
 
-        // Remove the device from management
-        trezorDevice.close();
-        trezorDevice = null;
+        if (trezorType != UNKNOWN) {
+          log.debug("Device detached: {}", trezorType);
 
-        // Issue a callback
-        trezorEventHandler.handleDeviceDetached(trezorType, descriptor);
+          // Remove the device from management
+          if (trezorDevice != null) {
+            trezorDevice.close();
+            trezorDevice = null;
+          }
+
+          // Issue a callback
+          trezorEventHandler.handleDeviceDetached(trezorType, descriptor);
+        }
       }
     });
   }
@@ -183,6 +193,7 @@ public class TrezorManager {
    */
   private boolean tryOpenDevice(TrezorType trezorType, short vid, short pid) {
 
+    // Fail fast
     if (trezorType == UNKNOWN) {
       return false;
     }
@@ -190,7 +201,8 @@ public class TrezorManager {
     try {
       openUsbDevice(vid, pid);
     } catch (LibUsbException e) {
-      log.warn("Unable to open device", e);
+      // No need for a stack trace here
+      log.warn("Unable to open device", e.getMessage());
       return false;
     }
 

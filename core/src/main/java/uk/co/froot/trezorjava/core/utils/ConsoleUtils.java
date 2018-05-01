@@ -21,36 +21,43 @@ public class ConsoleUtils {
     "30 31 32 33 34 35 36 37 38 39 " +
     "40 41 42 43 44 45 46 47 48 49 " +
     "50 51 52 53 54 55 56 57 58 59 " +
-    "60 61 62 63\n"
+    "60 61 62 63"
     + ANSI_RESET;
 
   /**
    * Formats a continuous byte array into a collection of 64 byte rows with a header
    * to assist USB packet debugging.
    *
-   * @param bytes The byte array.
+   * @param bytes      The byte array.
+   * @param showHeader True if a position header is required.
    *
    * @return A string containing the data suitable for console display.
    */
-  public static String formatBytesAsHex(byte[] bytes) {
+  public static String formatBytesAsHex(byte[] bytes, boolean showHeader) {
     char[] hexChars = new char[bytes.length * 3];
 
     // Build char array (fast)
     for (int i = 0; i < bytes.length; i++) {
       // Get the value
       int value = bytes[i] & 0xFF;
-      // Convert to hex with trailing space
-      hexChars[i * 3] = hexArray[value >>> 4];
-      hexChars[i * 3 + 1] = hexArray[value & 0x0F];
-      // Delimit with space or newline depending on row length
-      if (i > 0 && i % 63 == 0) {
-        hexChars[i * 3 + 2] = '\n';
-      } else {
+      if (i < 64) {
+        // Convert to hex with trailing space for first row
+        hexChars[i * 3] = hexArray[value >>> 4];
+        hexChars[i * 3 + 1] = hexArray[value & 0x0F];
         hexChars[i * 3 + 2] = ' ';
+      }
+      if (i % 64 == 0) {
+        hexChars[i * 3] = '\n';
+        hexChars[i * 3 + 1] = hexArray[value >>> 4];
+        hexChars[i * 3 + 2] = hexArray[value & 0x0F];
+      } else {
+        hexChars[i * 3] = ' ';
+        hexChars[i * 3 + 1] = hexArray[value >>> 4];
+        hexChars[i * 3 + 2] = hexArray[value & 0x0F];
       }
     }
 
     // Combine as string
-    return BYTE_HEADER_64 + new String(hexChars);
+    return showHeader ? BYTE_HEADER_64 + new String(hexChars) : new String(hexChars);
   }
 }

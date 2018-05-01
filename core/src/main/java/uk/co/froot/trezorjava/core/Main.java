@@ -3,6 +3,7 @@ package uk.co.froot.trezorjava.core;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
+import com.satoshilabs.trezor.lib.protobuf.TrezorType;
 import org.usb4java.LibUsb;
 import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
@@ -12,7 +13,7 @@ import java.io.InputStreamReader;
 
 public class Main {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InvalidProtocolBufferException {
 
     TrezorManager trezorManager = new TrezorManager();
     trezorManager.initialise();
@@ -21,33 +22,58 @@ public class Main {
     System.out.println(ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.");
     System.out.println("0 - Send Initialize");
     System.out.println("1 - Send Ping");
+    System.out.println("2 - Send Features");
+    System.out.println("h - Help (this menu)");
     System.out.println("q - Quit");
 
-    // TODO Re-instate the menu
-//    boolean exit = false;
-//    while (!exit) {
-//      System.out.print(": ");
-//      char key = readKey();
-//      switch (key) {
-//        case '1':
-//          trezorManager.sendPing();
-//          break;
-//
-//        case 'q':
-//          exit = true;
-//          break;
-//
-//        default:
-//      }
-//    }
-
-    try {
-      Message response = trezorManager.sendPing();
-      if (response instanceof TrezorMessage.Success) {
-        System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + " Message:" + ((TrezorMessage.Success) response).getMessage());
+    boolean exit = false;
+    while (!exit) {
+      Message response;
+      System.out.print("Command: ");
+      char key = readKey();
+      switch (key) {
+        case '0':
+          response = sendInitialize(trezorManager);
+          break;
+        case '1':
+          response = sendPing(trezorManager);
+          break;
+        case '2':
+          response = sendFeatures(trezorManager);
+          break;
+        case 'h':
+          System.out.println("Menu");
+          System.out.println("0 - Send Initialize");
+          System.out.println("1 - Send Ping");
+          System.out.println("2 - Send Features");
+          System.out.println("h - Help (this menu)");
+          System.out.println("q - Quit");
+        case 'q':
+          exit = true;
+          continue;
+        default:
+          continue;
       }
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+
+      if (response instanceof TrezorMessage.Success) {
+        System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((TrezorMessage.Success) response).getMessage());
+      }
+      if (response instanceof TrezorMessage.Failure) {
+        System.out.println(ConsoleUtils.ANSI_RED + "FAILURE" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((TrezorMessage.Failure) response).getMessage());
+      }
+      if (response instanceof TrezorMessage.Features) {
+        TrezorMessage.Features features = (TrezorMessage.Features) response;
+        System.out.println(ConsoleUtils.ANSI_GREEN + "FEATURES" + ConsoleUtils.ANSI_RESET);
+        System.out.println("Device Id: " + features.getDeviceId());
+        System.out.println("Label: " + features.getLabel());
+        System.out.println("Model: " + features.getModel());
+        System.out.println("Initialized: " + features.getInitialized());
+        System.out.println("Coin types:");
+        for (TrezorType.CoinType coinType : features.getCoinsList()) {
+          System.out.println(coinType.getCoinName());
+        }
+      }
+
     }
 
     // Clean up libusb resources
@@ -71,5 +97,19 @@ public class Main {
     }
   }
 
+  private static Message sendInitialize(TrezorManager trezorManager) throws InvalidProtocolBufferException {
+    TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
+    return trezorManager.sendMessage(message);
+  }
+
+  private static Message sendPing(TrezorManager trezorManager) throws InvalidProtocolBufferException {
+    TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
+    return trezorManager.sendMessage(message);
+  }
+
+  private static Message sendFeatures(TrezorManager trezorManager) throws InvalidProtocolBufferException {
+    TrezorMessage.Features message = TrezorMessage.Features.newBuilder().build();
+    return trezorManager.sendMessage(message);
+  }
 
 }

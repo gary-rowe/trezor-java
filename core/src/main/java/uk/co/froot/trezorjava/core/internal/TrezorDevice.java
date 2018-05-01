@@ -110,16 +110,16 @@ public class TrezorDevice {
       buffer.put((byte) 0);
     }
 
+    log.debug("> {} ({} message bytes, padded to {} bytes, sending as {} chunks)", msgName, msgSize, bufferSize, chunkCount);
+
     // Only perform byte presentation if debug is enabled
     if (log.isDebugEnabled()) {
 
       buffer.rewind();
       byte[] writeBytes = new byte[buffer.remaining()];
       buffer.get(writeBytes);
-      log.debug("\n>{}", formatBytesAsHex(writeBytes));
+      log.debug("\n> Payload{}", formatBytesAsHex(writeBytes, true));
     }
-
-    log.debug("> {} ({} message bytes, padded to {} bytes, sending as {} chunks)", msgName, msgSize, bufferSize, chunkCount);
 
     // Break the overall message into 64 byte chunks
     buffer.rewind();
@@ -143,12 +143,11 @@ public class TrezorDevice {
       if (result != LibUsb.SUCCESS) {
         throw new LibUsbException("Unable to send data", result);
       }
-      log.debug("> {} bytes sent to device.", transferred.get());
     }
-
 
   }
 
+  @SuppressWarnings("unchecked")
   private Message messageRead() throws InvalidProtocolBufferException {
 
     ByteBuffer messageBuffer;
@@ -177,20 +176,15 @@ public class TrezorDevice {
       if (result != LibUsb.SUCCESS) {
         throw new LibUsbException("Unable to read data", result);
       }
-      log.debug("< {} bytes read from device.", transferred.get());
 
       // Extract the chunk
       byte[] readBytes = new byte[chunkBuffer.remaining()];
       chunkBuffer.get(readBytes);
 
-      // Only perform byte presentation if debug is enabled
-      if (log.isDebugEnabled()) {
-        log.debug("\n>{}", ConsoleUtils.formatBytesAsHex(readBytes));
-      }
-
       // Check for invalid header length
       if (readBytes.length < 9) {
         if (invalidChunksCounter++ > 5) {
+          log.debug("\n< Header{}", ConsoleUtils.formatBytesAsHex(readBytes, true));
           throw new InvalidProtocolBufferException("Header too short after multiple chunks");
         }
         // Restart the loop
@@ -202,6 +196,7 @@ public class TrezorDevice {
         || readBytes[1] != (byte) '#'
         || readBytes[2] != (byte) '#') {
         if (invalidChunksCounter++ > 5) {
+          log.debug("\n< Header{}", ConsoleUtils.formatBytesAsHex(readBytes, true));
           throw new InvalidProtocolBufferException("Header invalid after multiple chunks");
         }
         // Restart the loop
@@ -209,6 +204,8 @@ public class TrezorDevice {
       }
 
       // Must be OK to be here
+      log.debug("\n< Header{}", ConsoleUtils.formatBytesAsHex(readBytes, true));
+
       msgId = (((int) readBytes[3] & 0xFF) << 8) + ((int) readBytes[4] & 0xFF);
       msgSize = (((int) readBytes[5] & 0xFF) << 24)
         + (((int) readBytes[6] & 0xFF) << 16)
@@ -241,7 +238,6 @@ public class TrezorDevice {
       if (result != LibUsb.SUCCESS) {
         throw new LibUsbException("Unable to read data", result);
       }
-      log.debug("< {} bytes read from device.", transferred.get());
 
       // Extract the chunk
       byte[] readBytes = new byte[chunkBuffer.remaining()];
@@ -259,8 +255,9 @@ public class TrezorDevice {
 
     byte[] msgData = Arrays.copyOfRange(messageBuffer.array(), 0, msgSize);
 
-    log.info("Parsing type {} ({} bytes):", messageType, msgData.length);
+    log.debug("\n< Message{}", ConsoleUtils.formatBytesAsHex(msgData, true));
 
+    log.info("Parsing type {} ({} bytes):", messageType, msgData.length);
     try {
       String className = TrezorMessage.class.getName() + "$" + messageType.name().replace("MessageType_", "");
       Class cls = Class.forName(className);

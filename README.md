@@ -55,7 +55,8 @@ case in mind. Use this if you already have a service layer for your project and 
 with the bare minimum of dependencies.
 
 The `service` module is for high level access to the Trezor device. It contains a collection of simple entry points that cover many 
-common use cases for the Trezor device. Use this if you are integrating the Trezor device into an existing project.
+common use cases for the Trezor device. Use this if you are integrating the Trezor device into an existing project. It relies on the
+popular [Bitcoinj](https://github.com/bitcoinj/bitcoinj) library.
 
 #### How do I include this in my project?
 

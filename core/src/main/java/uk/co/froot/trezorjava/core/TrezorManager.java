@@ -2,7 +2,6 @@ package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usb4java.DeviceDescriptor;
@@ -38,6 +37,21 @@ public class TrezorManager {
 
     tryGetDevice();
 
+  }
+
+  /**
+   * Send a message to the device.
+   *
+   * This is a blocking call.
+   *
+   * @param message A protobuf message to send to the device.
+   *
+   * @return A response message from the device.
+   *
+   * @throws InvalidProtocolBufferException If something goes wrong.
+   */
+  public Message sendMessage(Message message) throws InvalidProtocolBufferException {
+    return trezorDevice.sendMessage(message);
   }
 
   /**
@@ -121,14 +135,5 @@ public class TrezorManager {
 
   }
 
-  public Message sendPing() throws InvalidProtocolBufferException {
-    TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
-    return trezorDevice.sendMessage(message);
-  }
-
-  public Message sendInitialize() throws InvalidProtocolBufferException {
-    TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
-    return trezorDevice.sendMessage(message);
-  }
 
 }

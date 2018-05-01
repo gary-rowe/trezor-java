@@ -123,9 +123,11 @@ project(':service') {
 
   dependencies {
 
+    // Require core
     compile project(':core')
 
-
+    // Bitcoinj for Bitcoin operations on Java
+    compile "org.bitcoinj:bitcoinj-core:0.14.7"
 
   }
 

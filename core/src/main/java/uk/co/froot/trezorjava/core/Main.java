@@ -11,6 +11,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * Provides a collection of simple examples to demonstrate low level communication with the Trezor device.
+ */
 public class Main {
 
   public static void main(String[] args) throws InvalidProtocolBufferException, UsbException {
@@ -18,12 +21,8 @@ public class Main {
     TrezorManager trezorManager = new TrezorManager(new DefaultTrezorEventHandler());
 
     // Read commands and execute them
-    System.out.println(ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.");
-    System.out.println("0 - Send Initialize");
-    System.out.println("1 - Send Ping");
-    System.out.println("2 - Send Features");
-    System.out.println("h - Help (this menu)");
-    System.out.println("q - Quit");
+    System.out.println("\n"+ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.\n");
+    printHelp();
 
     boolean exit = false;
     while (!exit) {
@@ -38,12 +37,7 @@ public class Main {
           response = sendPing(trezorManager);
           break;
         case 'h':
-          System.out.println("Menu");
-          System.out.println("0 - Send Initialize");
-          System.out.println("1 - Send Ping");
-          System.out.println("2 - Send Features");
-          System.out.println("h - Help (this menu)");
-          System.out.println("q - Quit");
+          printHelp();
         case 'q':
           exit = true;
           continue;
@@ -75,6 +69,15 @@ public class Main {
     // Clean up resources
     trezorManager.close();
 
+  }
+
+  private static void printHelp() {
+    System.out.println("Menu");
+    System.out.println("0 - Send Initialize");
+    System.out.println("1 - Send Ping");
+    System.out.println("1 - Send Wipe");
+    System.out.println("h - Help (this menu)");
+    System.out.println("q - Quit");
   }
 
   /**

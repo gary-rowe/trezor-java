@@ -116,7 +116,7 @@ public class TrezorManager {
           // Attempt to open the device
           if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
             // Issue a callback
-            trezorEventHandler.handleDeviceAttached(trezorType, descriptor);
+            trezorEventHandler.onDeviceAttached(trezorType, descriptor);
           }
         }
       }
@@ -139,7 +139,7 @@ public class TrezorManager {
           }
 
           // Issue a callback
-          trezorEventHandler.handleDeviceDetached(trezorType, descriptor);
+          trezorEventHandler.onDeviceDetached(trezorType, descriptor);
         }
       }
     });

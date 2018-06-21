@@ -1,0 +1,7 @@
+apply plugin: 'application'
+run {
+  // Ensure input comes from stdin
+  standardInput = System.in
+}
+
+mainClassName = 'uk.co.froot.trezorjava.examples.Main'

@@ -132,3 +132,16 @@ project(':service') {
   }
 
 }
+
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Examples project
+project(':examples') {
+
+  dependencies {
+
+    // Require core
+    compile project(':service')
+
+  }
+
+}

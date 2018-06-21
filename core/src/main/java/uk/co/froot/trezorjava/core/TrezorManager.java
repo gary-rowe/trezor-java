@@ -40,26 +40,17 @@ public class TrezorManager {
   private final UsbServices usbServices;
 
   /**
-   * The callback handler.
-   */
-  private final TrezorEventHandler trezorEventHandler;
-
-  /**
    * Creates the manager wrapper for the device and initialises appropriate USB libraries.
    * Ensure you close the manager to release resources.
    *
-   * @param trezorEventHandler The TrezorEvent handler.
-   *
    * @throws LibUsbException If something goes wrong.
    */
-  public TrezorManager(DefaultTrezorEventHandler trezorEventHandler) throws LibUsbException, UsbException {
+  public TrezorManager() throws LibUsbException, UsbException {
 
-    this.trezorEventHandler = trezorEventHandler;
     this.usbServices = UsbHostManager.getUsbServices();
 
     initLibUsb();
-
-    initUsbListener(trezorEventHandler);
+    initUsbListener();
 
   }
 
@@ -95,11 +86,9 @@ public class TrezorManager {
   /**
    * Initialise the USB listener.
    *
-   * @param trezorEventHandler The Trezor event handler.
-   *
    * @throws UsbException If something goes wrong.
    */
-  private void initUsbListener(DefaultTrezorEventHandler trezorEventHandler) throws UsbException {
+  private void initUsbListener() throws UsbException {
     usbServices.addUsbServicesListener(new UsbServicesListener() {
 
       public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
@@ -115,8 +104,12 @@ public class TrezorManager {
 
           // Attempt to open the device
           if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
-            // Issue a callback
-            trezorEventHandler.onDeviceAttached(trezorType, descriptor);
+            // Notify listeners
+            TrezorEvents.notify(new TrezorEvent(
+              TrezorEventType.SHOW_DEVICE_READY,
+              trezorType,
+              descriptor
+            ));
           }
         }
       }
@@ -138,8 +131,12 @@ public class TrezorManager {
             trezorDevice = null;
           }
 
-          // Issue a callback
-          trezorEventHandler.onDeviceDetached(trezorType, descriptor);
+          // Notify listeners
+          TrezorEvents.notify(new TrezorEvent(
+            TrezorEventType.SHOW_DEVICE_DETACHED,
+            trezorType,
+            descriptor
+          ));
         }
       }
     });

@@ -18,7 +18,7 @@ public class Main {
 
   public static void main(String[] args) throws InvalidProtocolBufferException, UsbException {
 
-    TrezorManager trezorManager = new TrezorManager(new DefaultTrezorEventHandler());
+    TrezorManager trezorManager = new TrezorManager();
 
     // Read commands and execute them
     System.out.println("\n"+ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.\n");

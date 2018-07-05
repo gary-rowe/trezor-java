@@ -1,37 +1,40 @@
 package uk.co.froot.trezorjava.core;
 
 /**
- * A high level event provides sufficient information for a downstream
- * consumer to present appropriate information to the user and handle the
- * subsequent response. They allow the hardware wallet to make assumptions
- * about what is being shown on the user interface.
+ * <p>The Trezor UI State provides a quick reference to downstream consumers so that
+ * the user can be presented with a suitable interface to handle particular use cases.</p>
+ *
+ * <p>The UI state messages are insufficient on their own and should be used in conjunction with
+ * the overall device context to determine on-screen messages and so on.</p>
  *
  * @since 0.0.1
  *  
  */
-public enum TrezorEventType {
+public enum TrezorUIState {
 
-  // Device connectivity and communication
+  // Use cases
   /**
    * Indicates there is a problem with the hardware wallet (incompatible firmware, USB environment etc)
    */
   SHOW_DEVICE_FAILED,
 
   /**
-   * Indicates that a device is ready to be used.
-   * The service will provide more details about wallet creation being necessary and so on.
+   * Indicates that a device has been attached.
+   * This is prior to interrogation of the device features.
    */
-  SHOW_DEVICE_READY,
+  SHOW_DEVICE_ATTACHED,
 
   /**
    * Indicates that a device is detached.
+   * Further interaction with the device is no longer possible.
    */
   SHOW_DEVICE_DETACHED,
 
   /**
-   * Indicates that a device has been stopped and the service will need to be renewed
+   * Indicates that a device is ready to be used.
+   * The service will provide more details about wallet creation being necessary and so on.
    */
-  SHOW_DEVICE_STOPPED,
+  SHOW_DEVICE_READY,
 
   /**
    * The UI should show a message informing the user that the device requires a button press.

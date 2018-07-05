@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.core;
+package uk.co.froot.trezorjava.core.events;
 
 /**
  * Downstream API consumers should implement this to listen for events coming from the device.

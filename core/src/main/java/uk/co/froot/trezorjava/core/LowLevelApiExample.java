@@ -10,18 +10,30 @@ import javax.usb.UsbException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Provides a collection of simple examples to demonstrate low level communication with the Trezor device.
  */
-public class Main {
+public class LowLevelApiExample {
+
+  private static final ExecutorService trezorManagerService = Executors.newSingleThreadExecutor();
 
   public static void main(String[] args) throws InvalidProtocolBufferException, UsbException {
 
-    TrezorManager trezorManager = new TrezorManager();
+    // Trezor device manager runs on main thread
+    TrezorDeviceManager trezorDeviceManager = new TrezorDeviceManager();
+
+    System.out.println("\n"+ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\n");
+
+    // Blocking method until a device is attached
+    trezorDeviceManager.awaitDevice();
+
+    System.out.println("\n"+ConsoleUtils.ANSI_GREEN + "Trezor attached: " + ConsoleUtils.ANSI_RESET + "\n" + trezorDeviceManager.context().trezorType().name());
 
     // Read commands and execute them
-    System.out.println("\n"+ConsoleUtils.ANSI_BLUE + "Welcome to the Trezor CLI." + ConsoleUtils.ANSI_RESET + "\nPlease use the menu below to explore.\n");
+    System.out.println("\nPlease use the menu below to explore.\n");
     printHelp();
 
     boolean exit = false;
@@ -31,10 +43,10 @@ public class Main {
       char key = readKey();
       switch (key) {
         case '0':
-          response = sendInitialize(trezorManager);
+          response = sendInitialize(trezorDeviceManager);
           break;
         case '1':
-          response = sendPing(trezorManager);
+          response = sendPing(trezorDeviceManager);
           break;
         case 'h':
           printHelp();
@@ -45,6 +57,9 @@ public class Main {
           continue;
       }
 
+      if (response == null) {
+        continue;
+      }
       if (response instanceof TrezorMessage.Success) {
         System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((TrezorMessage.Success) response).getMessage());
       }
@@ -64,10 +79,10 @@ public class Main {
         }
       }
 
-    }
+    } // End of CLI loop
 
-    // Clean up resources
-    trezorManager.close();
+    // Exiting so clean up resources
+    trezorDeviceManager.close();
 
   }
 
@@ -96,14 +111,14 @@ public class Main {
     }
   }
 
-  private static Message sendInitialize(TrezorManager trezorManager) throws InvalidProtocolBufferException {
+  private static Message sendInitialize(TrezorDeviceManager trezorDeviceManager) throws InvalidProtocolBufferException {
     TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
-    return trezorManager.sendMessage(message);
+    return trezorDeviceManager.sendMessage(message);
   }
 
-  private static Message sendPing(TrezorManager trezorManager) throws InvalidProtocolBufferException {
+  private static Message sendPing(TrezorDeviceManager trezorDeviceManager) throws InvalidProtocolBufferException {
     TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
-    return trezorManager.sendMessage(message);
+    return trezorDeviceManager.sendMessage(message);
   }
 
 }

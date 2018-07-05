@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.usb4java.DeviceHandle;
 import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
+import uk.co.froot.trezorjava.core.events.TrezorEvent;
+import uk.co.froot.trezorjava.core.events.TrezorEvents;
+import uk.co.froot.trezorjava.core.exceptions.TrezorException;
 import uk.co.froot.trezorjava.core.internal.TrezorDevice;
 
 import javax.usb.UsbDeviceDescriptor;
@@ -19,13 +22,14 @@ import javax.usb.event.UsbServicesListener;
 import static uk.co.froot.trezorjava.core.TrezorType.*;
 
 /**
- * Manager class to provide the following:
+ * <p>Manager class to provide a low level interface to the device. It offers message passing,
+ * event reception facilities and a device context.</p>
  *
- * Access to the top level Trezor API.
+ * @since 0.0.1
  */
-public class TrezorManager {
+public class TrezorDeviceManager {
 
-  private static final Logger log = LoggerFactory.getLogger(TrezorManager.class);
+  private static final Logger log = LoggerFactory.getLogger(TrezorDeviceManager.class);
 
   private static final int TREZOR_INTERFACE = 0;
 
@@ -40,17 +44,46 @@ public class TrezorManager {
   private final UsbServices usbServices;
 
   /**
+   * The Trezor device context.
+   */
+  private final TrezorDeviceContext deviceContext = new TrezorDeviceContext();
+
+  /**
    * Creates the manager wrapper for the device and initialises appropriate USB libraries.
    * Ensure you close the manager to release resources.
    *
    * @throws LibUsbException If something goes wrong.
    */
-  public TrezorManager() throws LibUsbException, UsbException {
+  public TrezorDeviceManager() throws TrezorException {
 
-    this.usbServices = UsbHostManager.getUsbServices();
+    try {
+      this.usbServices = UsbHostManager.getUsbServices();
+      initLibUsb();
+      initUsbListener();
+    } catch (UsbException e) {
+      throw new TrezorException("Unable to get javax USB services.", e);
+    } catch (LibUsbException e) {
+      throw new TrezorException("Unable to get libusb services.", e);
+    }
 
-    initLibUsb();
-    initUsbListener();
+  }
+
+  /**
+   * Await the connection of a valid Trezor device.
+   *
+   * This method blocks until the device context is updated to reflect the new state,
+   * usually by a USB attach/detach event.
+   */
+  public void awaitDevice() {
+    // Wait for a device to be present (blocking)
+    while (!deviceContext.isDeviceAttached()) {
+      try {
+        // Strike a balance between CPU loading and user responsiveness
+        Thread.sleep(400);
+      } catch (InterruptedException e) {
+        throw new TrezorException("Unexecpted interruption", e);
+      }
+    }
 
   }
 
@@ -63,9 +96,9 @@ public class TrezorManager {
    *
    * @return A response message from the device.
    *
-   * @throws InvalidProtocolBufferException If something goes wrong.
+   * @throws TrezorException If something goes wrong.
    */
-  public Message sendMessage(Message message) throws InvalidProtocolBufferException {
+  public Message sendMessage(Message message) throws TrezorException {
 
     // Fail fast
     if (trezorDevice == null) {
@@ -73,7 +106,18 @@ public class TrezorManager {
       return null;
     }
 
-    return trezorDevice.sendMessage(message);
+    try {
+      return trezorDevice.sendMessage(message);
+    } catch (InvalidProtocolBufferException e) {
+      throw new TrezorException("Message sending failed.", e);
+    }
+  }
+
+  /**
+   * @return The device context (connectivity, device type etc).
+   */
+  public TrezorDeviceContext context() {
+    return deviceContext;
   }
 
   /**
@@ -85,10 +129,10 @@ public class TrezorManager {
 
   /**
    * Initialise the USB listener.
-   *
-   * @throws UsbException If something goes wrong.
    */
-  private void initUsbListener() throws UsbException {
+  private void initUsbListener() {
+
+    // Add a low level USB listener for attachment messages
     usbServices.addUsbServicesListener(new UsbServicesListener() {
 
       public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
@@ -104,12 +148,18 @@ public class TrezorManager {
 
           // Attempt to open the device
           if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
+            // Update context
+            deviceContext.setDeviceAttached(true);
+            deviceContext.setTrezorType(trezorType);
+
             // Notify listeners
             TrezorEvents.notify(new TrezorEvent(
-              TrezorEventType.SHOW_DEVICE_READY,
+              TrezorDeviceState.DEVICE_ATTACHED,
+              TrezorUIState.SHOW_DEVICE_ATTACHED,
               trezorType,
-              descriptor
-            ));
+              descriptor,
+              null));
+
           }
         }
       }
@@ -125,6 +175,10 @@ public class TrezorManager {
         if (trezorType != UNKNOWN) {
           log.debug("Device detached: {}", trezorType);
 
+          // Update context
+          deviceContext.setDeviceAttached(false);
+          deviceContext.setTrezorType(trezorType);
+
           // Remove the device from management
           if (trezorDevice != null) {
             trezorDevice.close();
@@ -133,10 +187,11 @@ public class TrezorManager {
 
           // Notify listeners
           TrezorEvents.notify(new TrezorEvent(
-            TrezorEventType.SHOW_DEVICE_DETACHED,
+            TrezorDeviceState.DEVICE_DETACHED,
+            TrezorUIState.SHOW_DEVICE_DETACHED,
             trezorType,
-            descriptor
-          ));
+            descriptor,
+            null));
         }
       }
     });
@@ -222,5 +277,4 @@ public class TrezorManager {
     // Must have a Trezor device to be here
     trezorDevice = new TrezorDevice(handle);
   }
-
 }

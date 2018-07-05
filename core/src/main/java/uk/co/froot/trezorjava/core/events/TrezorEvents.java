@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.core;
+package uk.co.froot.trezorjava.core.events;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -6,7 +6,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.wallet.KeyChain;
-import uk.co.froot.trezorjava.core.Identity;
 import uk.co.froot.trezorjava.core.TrezorType;
 
 import java.net.URI;
@@ -14,18 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Interface to provide the following to applications:</p>
- * <ul>
- * <li>Common methods available to different hardware wallet devices</li>
- * </ul>
- * <p>A hardware wallet client acts as the bridge between the application and the device. It provides a common interface for sending messages
- * to the device, and subscribes to events coming from the device.</p>
- * <p>Blocking implementations will block their thread of execution until a response is received.</p>
- * <p>Hardware wallet clients are tightly coupled to their respective wallet so are typically referenced statically in consuming applications.</p>
+ * <p>High level API offering common use cases for Trezor devices.</p>
+ *
+ * @since 0.0.1
  */
 public interface TrezorService {
-
-  //TrezorContext getContext();
 
   /**
    * <p>Reset device to default state and ask for device details</p>
@@ -35,7 +27,6 @@ public interface TrezorService {
    * <li>PIN_MATRIX_REQUEST if the PIN is needed</li>
    * <li>FEATURES containing the available feature set</li>
    * </ul>
-   *
    */
   void initialise();
 
@@ -45,7 +36,6 @@ public interface TrezorService {
    * <ul>
    * <li>SUCCESS if the device is present</li>
    * </ul>
-   *
    */
   void ping();
 
@@ -56,7 +46,6 @@ public interface TrezorService {
    * <ul>
    * <li>SUCCESS if the PIN is needed</li>
    * </ul>
-   *
    */
   void clearSession();
 
@@ -544,4 +533,8 @@ public interface TrezorService {
    */
   TrezorType name();
 
+  /**
+   * @return The current features of the connected device, or null if not present.
+   */
+  TrezorMessage.Features getFeatures();
 }

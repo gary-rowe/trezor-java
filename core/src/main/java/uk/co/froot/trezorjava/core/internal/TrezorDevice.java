@@ -19,6 +19,12 @@ import java.util.Arrays;
 
 import static uk.co.froot.trezorjava.core.utils.ConsoleUtils.formatBytesAsHex;
 
+/**
+ * Internal class to represent a Trezor device for byte-level message passing.
+ *
+ * @see uk.co.froot.trezorjava.core.TrezorDeviceManager TrezorDeviceManager for external API.
+ * @since 0.0.1
+ */
 public class TrezorDevice {
 
   private static final Logger log = LoggerFactory.getLogger(TrezorDevice.class);
@@ -38,6 +44,9 @@ public class TrezorDevice {
    */
   private static final int TIMEOUT = 3000;
 
+  /**
+   * USB device handle.
+   */
   private final DeviceHandle deviceHandle;
 
   /**
@@ -147,6 +156,13 @@ public class TrezorDevice {
 
   }
 
+  /**
+   * Read a message from the device.
+   *
+   * @return A protobuf message from the device.
+   *
+   * @throws InvalidProtocolBufferException If something goes wrong.
+   */
   @SuppressWarnings("unchecked")
   private Message messageRead() throws InvalidProtocolBufferException {
 
@@ -263,9 +279,8 @@ public class TrezorDevice {
       Class cls = Class.forName(className);
       Method method = cls.getDeclaredMethod("parseFrom", byte[].class);
       //noinspection PrimitiveArrayArgumentToVariableArgMethod
-      return (Message)method.invoke(null, msgData);
-    }
-    catch (Exception ex) {
+      return (Message) method.invoke(null, msgData);
+    } catch (Exception ex) {
       throw new InvalidProtocolBufferException("Exception while calling: parseMessageFromBytes for MessageType: " + messageType.name());
     }
 

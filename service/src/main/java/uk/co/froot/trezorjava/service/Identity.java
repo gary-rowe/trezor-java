@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.core;
+package uk.co.froot.trezorjava.service;
 
 import java.net.URI;
 import java.util.Arrays;

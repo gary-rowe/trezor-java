@@ -1,22 +1,23 @@
 package uk.co.froot.trezorjava.service;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.wallet.KeyChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.froot.trezorjava.core.TrezorDeviceManager;
+import uk.co.froot.trezorjava.core.events.TrezorEventListener;
+import uk.co.froot.trezorjava.core.exceptions.TrezorException;
 
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>Service to provide the following to application:</p>
@@ -33,160 +34,57 @@ import java.util.concurrent.TimeUnit;
  */
 public class V2TrezorService implements TrezorService {
 
-  private static final Logger log = LoggerFactory.getLogger(HardwareWalletService.class);
+  private static final Logger log = LoggerFactory.getLogger(V2TrezorService.class);
+  private final TrezorDeviceManager deviceManager;
+  private final TrezorEventListener trezorEventListener;
 
   /**
-   * The current hardware wallet context
+   * @param deviceManager The Trezor device manager for low level communications.
+   * @param eventListener The Trezor event listener to act as a bridge between the device and the downstream wallet implementation.
    */
-  private final HardwareWalletContext context;
+  public V2TrezorService(TrezorDeviceManager deviceManager, TrezorEventListener eventListener) {
+    this.deviceManager = deviceManager;
+    this.trezorEventListener = eventListener;
+  }
+
 
   /**
-   * True if the service has stopped
+   * @return The Trezor device manager in use.
    */
-  private boolean stopped = false;
-
-  /**
-   * @param client The hardware wallet client providing the low level messages
-   */
-  public V2TrezorService(HardwareWalletClient client) {
-
-    Preconditions.checkNotNull(client, "'client' must be present");
-
-    context = new HardwareWalletContext(client);
+  public TrezorDeviceManager getDeviceManager() {
+    return deviceManager;
   }
 
   /**
-   * <p>Start the service and await the connection of a hardware wallet</p>
-   */
-  public void start() {
-
-    if (stopped) {
-      throw new IllegalStateException("Once stopped the service must be started with a fresh instance");
-    }
-
-    // Start the hardware wallet state machine
-    clientMonitorService.scheduleWithFixedDelay(
-      new Runnable() {
-        @Override
-        public void run() {
-
-          // Note: If an unhandled error occurs in a scheduled exception
-          // it causes all future requests to be suppressed
-          // We want to alert the user to a failure and keep active
-          // to avoid "silent failures"
-
-          try {
-
-            // It if we are in the await state then we use a client
-            // call (e.g. initialise()) to poke the device to elicit
-            // a low level message response
-            context.getState().await(context);
-          } catch (RuntimeException e) {
-            log.error("Unexpected error transitioning between states", e);
-            // Trigger a failure mode
-            context.resetToFailed();
-          }
-
-        }
-      },
-      0, // Immediate start
-      // Delay time in order to progress the state
-      // Devices will respond with some kind of event within 1 second for states that are
-      // awaiting progression (e.g. Connected -> Initialised)
-      // Setting this lower has no effect on speed of operations and may introduce
-      // instability with overlapping calls due to "impatience"
-      1, TimeUnit.SECONDS
-    );
-  }
-
-  /**
-   * <p>Stop the service</p>
-   */
-  public void stopAndWait() {
-
-    log.debug("Service {} stopping...", this.getClass().getSimpleName());
-
-    context.resetToStopped();
-
-    // Ensure downstream subscribers are purged
-    HardwareWalletEvents.unsubscribeAll();
-    TrezorEvents.unsubscribeAll();
-
-    try {
-      clientMonitorService.awaitTermination(1, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      log.warn("Client monitor thread did not terminate within the allowed time");
-    }
-
-    stopped = true;
-
-  }
-
-  /**
-   * @return True if the service is stopped
-   */
-  public boolean isStopped() {
-
-    return stopped;
-  }
-
-  /**
-   * @return The hardware wallet context providing access to the current device state
-   */
-  public HardwareWalletContext getContext() {
-    return context;
-  }
-
-  /**
-   * @return True if the hardware wallet has been attached and a successful connection made
-   */
-  public boolean isDeviceReady() {
-
-    return context.getFeatures().isPresent();
-
-  }
-
-  /**
-   * @return True if the hardware wallet has been initialised with a seed phrase (<code>Features.isInitialised()</code>)
+   * <p>Ping the device.</p>
    *
-   * @throws IllegalStateException If called when the device is not ready (see <code>isDeviceReady()</code>)
-   */
-  public boolean isWalletPresent() {
-
-    if (!context.getFeatures().isPresent()) {
-      throw new IllegalStateException("Device is not ready. Check the hardware wallet events.");
-    }
-
-    return context.getFeatures().get().isInitialized();
-
-  }
-
-  /**
-   * <p>Ping the device</p>
+   * <p>This will trigger a SHOW_OPERATION_SUCCEEDED.</p>
    *
-   * <p>This will trigger a SHOW_OPERATION_SUCCEEDED</p>
+   * @throws TrezorException If something goes wrong.
    */
-  public void requestPing() {
+  public void ping() {
 
-    // Let the state changes occur as a result of the internal messages
-    context.getClient().ping();
+    TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
+    deviceManager.sendMessage(message);
 
   }
 
   /**
-   * <p>Cancel the current operation and return to the initialised state</p>
+   * <p>Cancel the current operation and return to the initialised state.</p>
    *
-   * <p>This will trigger a SHOW_OPERATION_FAILED and a DEVICE_READY event during the reset phase</p>
+   * <p>This will trigger a SHOW_OPERATION_FAILED and a DEVICE_READY event during the reset phase.</p>
+   *
+   * @throws TrezorException If something goes wrong.
    */
-  public void requestCancel() {
+  public void cancel() {
 
-    // Let the state changes occur as a result of the internal messages
-    context.getClient().cancel();
+    TrezorMessage.Cancel message = TrezorMessage.Cancel.newBuilder().build();
+    deviceManager.sendMessage(message);
 
   }
 
   /**
-   * <p>Clear the device back to factory settings</p>
+   * <p>Clear the device back to factory settings.</p>
    */
   public void wipeDevice() {
 
@@ -207,7 +105,7 @@ public class V2TrezorService implements TrezorService {
   }
 
   /**
-   * <p>Initiate the process where the hardware wallet is first wiped then reset using its own entropy</p>
+   * <p>Initiate the process where the hardware wallet is first wiped then reset using its own entropy.</p>
    * <p>This is the recommended method to use for creating a wallet securely.</p>
    *
    * @param language      The language (e.g. "english")
@@ -314,32 +212,32 @@ public class V2TrezorService implements TrezorService {
   }
 
   /**
-    * <p>
-     * Provide the user entered passphrase</p>
-     *
-     * @param passphrase The passphrase taken from the user computer input
-     */
-    public void providePassphrase(String passphrase) {
+   * <p>Provide the user entered passphrase.</p>
+   *
+   * @param passphrase The passphrase taken from the user computer input
+   */
+  public void providePassphrase(String passphrase) {
 
-        // Use the FSM context to decide the appropriate continuation point
-        switch (context.getCurrentUseCase()) {
-            case DETACHED:
-                break;
-            case REQUEST_PUBLIC_KEY_FOR_IDENTITY:
-                context.continueGetPublicKeyForIdentityUseCase_Passphrase(passphrase);
-                break;                        
-            case SIGN_IDENTITY:
-                context.continueSignIdentity_Passphrase(passphrase);
-                break;
-            default:
-                log.warn("Unknown passphrase request use case: {}", context.getCurrentUseCase().name());
-        }
+    // Use the FSM context to decide the appropriate continuation point
+    switch (context.getCurrentUseCase()) {
+      case DETACHED:
+        break;
+      case REQUEST_PUBLIC_KEY_FOR_IDENTITY:
+        context.continueGetPublicKeyForIdentityUseCase_Passphrase(passphrase);
+        break;
+      case SIGN_IDENTITY:
+        context.continueSignIdentity_Passphrase(passphrase);
+        break;
+      default:
+        log.warn("Unknown passphrase request use case: {}", context.getCurrentUseCase().name());
     }
+  }
 
-    /**
-     * <p>
-     * Provide additional entropy to the device to reduce risk of hardware compromise</p>
-     * @param entropy Random bytes provided by a secure random number generator (see {@link #generateEntropy()}
+  /**
+   * <p>
+   * Provide additional entropy to the device to reduce risk of hardware compromise</p>
+   *
+   * @param entropy Random bytes provided by a secure random number generator (see {@link #generateEntropy()}
    */
   public void provideEntropy(byte[] entropy) {
 

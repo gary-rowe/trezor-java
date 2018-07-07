@@ -26,8 +26,9 @@ public class TrezorServices {
 
     // Determine the appropriate service based on the device type
     switch (trezorDeviceManager.context().trezorType()) {
-      case V1:
-        return new V1TrezorService(trezorDeviceManager, trezorEventListener);
+      // TODO Create support for V1 Trezor device via libusb
+//      case V1:
+//        return new V1TrezorService(trezorDeviceManager, trezorEventListener);
       case V2_FACTORY:
         return new V2TrezorService(trezorDeviceManager, trezorEventListener);
       case V2:
@@ -36,7 +37,6 @@ public class TrezorServices {
         throw new TrezorException("Unknown Trezor device attached.");
     }
 
-    return null;
   }
 
 }

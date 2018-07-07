@@ -67,7 +67,10 @@ public class TrezorDevice {
     if (deviceHandle == null)
       throw new IllegalStateException("sendMessage: usbConnection already closed, cannot send message");
 
+    // Write the message
     messageWrite(message);
+
+    // Immediately block for a response
     return messageRead();
   }
 

@@ -5,7 +5,7 @@ import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 /**
  * <p>Provides metadata about the current Trezor device (connection status, device type etc).</p>
  */
-public class TrezorDeviceContext {
+public class TrezorContext {
 
   // These must be volatile due to the nature of the polling mechanism
   private volatile boolean deviceAttached = false;

@@ -10,6 +10,7 @@ import org.bitcoinj.wallet.KeyChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
+import uk.co.froot.trezorjava.core.TrezorUseCaseState;
 import uk.co.froot.trezorjava.core.events.TrezorEventListener;
 import uk.co.froot.trezorjava.core.exceptions.TrezorException;
 
@@ -88,7 +89,7 @@ public class V2TrezorService implements TrezorService {
    */
   public void wipeDevice() {
 
-    // Set the FSM context
+    //
     context.beginWipeDeviceUseCase();
 
   }

@@ -46,7 +46,7 @@ public class TrezorDeviceManager {
   /**
    * The Trezor device context.
    */
-  private final TrezorDeviceContext deviceContext = new TrezorDeviceContext();
+  private final TrezorContext deviceContext = new TrezorContext();
 
   /**
    * Creates the manager wrapper for the device and initialises appropriate USB libraries.
@@ -116,7 +116,7 @@ public class TrezorDeviceManager {
   /**
    * @return The device context (connectivity, device type etc).
    */
-  public TrezorDeviceContext context() {
+  public TrezorContext context() {
     return deviceContext;
   }
 
@@ -135,6 +135,7 @@ public class TrezorDeviceManager {
     // Add a low level USB listener for attachment messages
     usbServices.addUsbServicesListener(new UsbServicesListener() {
 
+      @Override
       public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
 
         // Obtain the descriptor
@@ -164,6 +165,7 @@ public class TrezorDeviceManager {
         }
       }
 
+      @Override
       public void usbDeviceDetached(UsbServicesEvent usbServicesEvent) {
 
         // Obtain the descriptor

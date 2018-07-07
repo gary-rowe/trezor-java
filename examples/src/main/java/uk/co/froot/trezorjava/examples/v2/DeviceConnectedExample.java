@@ -25,15 +25,12 @@ public class DeviceConnectedExample implements TrezorEventListener {
    *
    * @param args None required
    *
-   * @throws Exception If something goes wrong
    */
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
 
     // Create a service and register this as the event listener
     // running on a separate executor for convenience
-    TrezorService trezorService = TrezorServices.awaitDevice(new DeviceConnectedExample());
-
-    trezorService.initialise();
+    TrezorServices.awaitDevice(new DeviceConnectedExample());
 
   }
 

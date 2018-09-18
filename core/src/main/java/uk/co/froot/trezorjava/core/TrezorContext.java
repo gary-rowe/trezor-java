@@ -1,6 +1,6 @@
 package uk.co.froot.trezorjava.core;
 
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 
 /**
  * <p>Provides metadata about the current Trezor device (connection status, device type etc).</p>
@@ -10,7 +10,7 @@ public class TrezorContext {
   // These must be volatile due to the nature of the polling mechanism
   private volatile boolean deviceAttached = false;
   private volatile TrezorType trezorType = TrezorType.UNKNOWN;
-  private volatile TrezorMessage.Features features = null;
+  private volatile TrezorMessageManagement.Features features = null;
 
   /**
    * Clear all fields back to a detached state.
@@ -64,14 +64,14 @@ public class TrezorContext {
   /**
    * @param features The Trezor device Features message.
    */
-  public void setFeatures(TrezorMessage.Features features) {
+  public void setFeatures(TrezorMessageManagement.Features features) {
     this.features = features;
   }
 
   /**
    * @return The Trezor device Features message.
    */
-  public TrezorMessage.Features getFeatures() {
+  public TrezorMessageManagement.Features getFeatures() {
     return features;
   }
 }

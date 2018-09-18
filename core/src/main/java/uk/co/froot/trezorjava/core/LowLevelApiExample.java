@@ -2,8 +2,8 @@ package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
-import com.satoshilabs.trezor.lib.protobuf.TrezorType;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
+import hw.trezor.messages.common.MessagesCommon;
 import uk.co.froot.trezorjava.core.utils.ConsoleUtils;
 
 import javax.usb.UsbException;
@@ -60,23 +60,19 @@ public class LowLevelApiExample {
       if (response == null) {
         continue;
       }
-      if (response instanceof TrezorMessage.Success) {
-        System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((TrezorMessage.Success) response).getMessage());
+      if (response instanceof MessagesCommon.Success) {
+        System.out.println(ConsoleUtils.ANSI_GREEN + "SUCCESS" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((MessagesCommon.Success) response).getMessage());
       }
-      if (response instanceof TrezorMessage.Failure) {
-        System.out.println(ConsoleUtils.ANSI_RED + "FAILURE" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((TrezorMessage.Failure) response).getMessage());
+      if (response instanceof MessagesCommon.Failure) {
+        System.out.println(ConsoleUtils.ANSI_RED + "FAILURE" + ConsoleUtils.ANSI_RESET + "\nMessage:" + ((MessagesCommon.Failure) response).getMessage());
       }
-      if (response instanceof TrezorMessage.Features) {
-        TrezorMessage.Features features = (TrezorMessage.Features) response;
+      if (response instanceof TrezorMessageManagement.Features) {
+        TrezorMessageManagement.Features features = (TrezorMessageManagement.Features) response;
         System.out.println(ConsoleUtils.ANSI_GREEN + "FEATURES" + ConsoleUtils.ANSI_RESET);
         System.out.println("Device Id: " + features.getDeviceId());
         System.out.println("Label: " + features.getLabel());
         System.out.println("Model: " + features.getModel());
         System.out.println("Initialized: " + features.getInitialized());
-        System.out.println("Coin types:");
-        for (TrezorType.CoinType coinType : features.getCoinsList()) {
-          System.out.println(coinType.getCoinName());
-        }
       }
 
     } // End of CLI loop
@@ -112,12 +108,12 @@ public class LowLevelApiExample {
   }
 
   private static Message sendInitialize(TrezorDeviceManager trezorDeviceManager) throws InvalidProtocolBufferException {
-    TrezorMessage.Initialize message = TrezorMessage.Initialize.newBuilder().build();
+    TrezorMessageManagement.Initialize message = TrezorMessageManagement.Initialize.newBuilder().build();
     return trezorDeviceManager.sendMessage(message);
   }
 
   private static Message sendPing(TrezorDeviceManager trezorDeviceManager) throws InvalidProtocolBufferException {
-    TrezorMessage.Ping message = TrezorMessage.Ping.newBuilder().setMessage("Pong!").build();
+    TrezorMessageManagement.Ping message = TrezorMessageManagement.Ping.newBuilder().setMessage("Pong!").build();
     return trezorDeviceManager.sendMessage(message);
   }
 

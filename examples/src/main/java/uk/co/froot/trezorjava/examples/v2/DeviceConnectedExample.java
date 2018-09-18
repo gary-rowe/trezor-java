@@ -1,6 +1,7 @@
 package uk.co.froot.trezorjava.examples.v2;
 
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;
@@ -55,7 +56,7 @@ public class DeviceConnectedExample implements TrezorEventListener {
       case DEVICE_CONNECTED:
         log.info("Device has connected. Reading features.");
         // Get some information about the device
-        TrezorMessage.Features features = trezorService.getFeatures();
+        TrezorMessageManagement.Features features = trezorService.getFeatures();
         log.info("Features: {}", features);
 
       default:

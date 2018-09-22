@@ -1,6 +1,5 @@
 package uk.co.froot.trezorjava.examples.v2;
 
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,7 @@ import uk.co.froot.trezorjava.service.TrezorService;
 import uk.co.froot.trezorjava.service.TrezorServices;
 
 /**
- * <p>Connect to a Trezor</p>
+ * <p>Connect to a Trezor using the service API and identify its type.</p>
  *
  * @since 0.0.1
  *  
@@ -27,10 +26,10 @@ public class DeviceConnectedExample implements TrezorEventListener {
    * @param args None required
    *
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
 
     // Create a service and register this as the event listener
-    // running on a separate executor for convenience
+    // TODO Set up the listener after service created
     TrezorServices.awaitDevice(new DeviceConnectedExample());
 
   }

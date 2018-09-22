@@ -81,7 +81,7 @@ public class TrezorDeviceManager {
         // Strike a balance between CPU loading and user responsiveness
         Thread.sleep(400);
       } catch (InterruptedException e) {
-        throw new TrezorException("Unexecpted interruption", e);
+        throw new TrezorException("Unexpected interruption", e);
       }
     }
 

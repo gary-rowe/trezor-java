@@ -150,6 +150,35 @@ up to the owner of the upstream repo.
 The generated source of the protobuf files are not held in version control. This is because they are derived resources and can run into several megabytes of code
 that are likely to never be reviewed by a developer. This only serves to bloat the upstream repository to no advantage.
 
+### Modules
+
+The following section will help you become more familiar with the code base.
+
+#### Core
+
+This is the lowest level of the API. It provides a very simple abstraction of the Trezor devices in terms of their USB connectivity. 
+It strongly relies on `usb4java`. Typically developers will use this to communicate with the Trezor device and then place a higher level
+API above it.
+
+The Core module contains the Trezor Common repository so that it can access the latest protobuf messages. A `TrezorDeviceManager` is used
+as the primary entry point to the device and a `TrezorEventListener` interface is used as the callback entry point for any events from the
+device. Note that the device is spontaneous in providing events such as a connect/disconnect.
+
+#### Service
+
+The service API provides a medium level of complexity and aims to support common use cases through a simple call to a service. This then
+uses a finite state machine (FSM) to manage the ongoing interaction with the device and the messages passing to and from it. 
+
+This is the normal entry level for developers wishing to use the Trezor to get something done.
+
+#### Examples
+
+The examples are there to provide a minimal set of code to achieve common use cases. They should not be assumed to be production level code
+as they do not have all the error handling code that would require.
+
+Typically an example will have a `main()` method and will stay running long enough for the device to exercised. In some cases there is a requirement
+for use interactivity and this is done from the command line. 
+
 ### Troubleshooting
 
 The following are known issues and their solutions or workarounds.

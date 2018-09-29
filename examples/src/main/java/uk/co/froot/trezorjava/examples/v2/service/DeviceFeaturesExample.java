@@ -37,6 +37,7 @@ public class DeviceFeaturesExample implements TrezorEventListener {
     Thread.sleep(2000);
   }
 
+  // TODO Hook up the TrezorEvents to receive Features message
   @Override
   public void onTrezorEvent(TrezorEvent event) {
     log.debug("Received Trezor event: '{}'", event.getUIState().name());
@@ -59,7 +60,7 @@ public class DeviceFeaturesExample implements TrezorEventListener {
         log.info("Device has connected. Reading features.");
         // Get some information about the device
         TrezorMessageManagement.Features features = service.getFeatures();
-        log.info("Features: {}", features);
+        log.info("Features: {}", features.getLabel());
 
       default:
         // Ignore

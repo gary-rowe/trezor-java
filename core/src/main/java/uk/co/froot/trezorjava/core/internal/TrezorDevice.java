@@ -276,7 +276,6 @@ public class TrezorDevice {
 
     log.debug("\n< Message{}", ConsoleUtils.formatBytesAsHex(msgData, true));
 
-    log.info("Parsing type {} ({} bytes):", messageType, msgData.length);
     try {
       Method method = extractParserMethod(messageType);
       //noinspection PrimitiveArrayArgumentToVariableArgMethod
@@ -288,57 +287,59 @@ public class TrezorDevice {
   }
 
   /**
-   *
-   * @param messageType The abstract message type
-   * @return
-   * @throws ClassNotFoundException If
-   * @throws NoSuchMethodException
+   * Identify a suitable parsing method from the message type name.
+   * @param messageType The abstract message type identifying the inner class and group.
+   * @return A parsing method than can be invoked to convert the bytes into a message.
+   * @throws ClassNotFoundException If the class could not be found (unknown message prefix).
+   * @throws NoSuchMethodException If the class was not a correctly formed protobuf message.
    */
   private Method extractParserMethod(TrezorMessage.MessageType messageType) throws ClassNotFoundException, NoSuchMethodException {
+
+    log.debug("Parsing type {}):", messageType);
 
     // Identify the expected inner class name
     String innerClassName = messageType.name().replace("MessageType_", "");
 
     // Identify the default class name
-    String className = TrezorMessageManagement.class.getName() + "$" + innerClassName;
+    String outerClassName = TrezorMessageManagement.class.getName() + "$" + innerClassName;
 
-    // Search for any known sub-groups
+    // Search for any known sub-groups and adjust the outer class name accordingly
     if (innerClassName.startsWith("Ethereum")) {
-      className = TrezorMessageEthereum.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageEthereum.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("NEM")) {
-      className = TrezorMessageNem.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageNem.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Lisk")) {
-      className = TrezorMessageLisk.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageLisk.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Tezos")) {
-      className = TrezorMessageTezos.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageTezos.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Stellar")) {
-      className = TrezorMessageStellar.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageStellar.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Tron")) {
-      className = TrezorMessageTron.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageTron.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Cardano")) {
-      className = TrezorMessageCardano.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageCardano.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Ontology")) {
-      className = TrezorMessageOntology.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageOntology.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Ripple")) {
-      className = TrezorMessageRipple.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageRipple.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("Monero")) {
-      className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageMonero.class.getName() + "$" + innerClassName;
     }
     if (innerClassName.startsWith("DebugMonero")) {
-      className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+      outerClassName = TrezorMessageMonero.class.getName() + "$" + innerClassName;
     }
 
-    log.debug("Class name: {}", className);
-    Class cls = Class.forName(className);
+    log.debug("Class name: {}", outerClassName);
+    Class cls = Class.forName(outerClassName);
     return cls.getDeclaredMethod("parseFrom", byte[].class);
   }
 

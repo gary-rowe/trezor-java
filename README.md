@@ -179,6 +179,8 @@ as they do not have all the error handling code that would require.
 Typically an example will have a `main()` method and will stay running long enough for the device to exercised. In some cases there is a requirement
 for use interactivity and this is done from the command line. 
 
+The examples are arranged in terms of the Trezor device type and the module. The names should be descriptive enough to identify their use case.
+
 ### Troubleshooting
 
 The following are known issues and their solutions or workarounds.

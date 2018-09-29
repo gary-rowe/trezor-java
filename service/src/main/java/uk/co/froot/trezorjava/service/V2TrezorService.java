@@ -4,7 +4,6 @@ import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
-import uk.co.froot.trezorjava.core.events.TrezorEventListener;
 
 /**
  * <p>Service to provide the following to application:</p>
@@ -23,15 +22,12 @@ public class V2TrezorService implements TrezorService {
 
   private static final Logger log = LoggerFactory.getLogger(V2TrezorService.class);
   private final TrezorDeviceManager deviceManager;
-  private final TrezorEventListener trezorEventListener;
 
   /**
    * @param deviceManager The Trezor device manager for low level communications.
-   * @param eventListener The Trezor event listener to act as a bridge between the device and the downstream wallet implementation.
    */
-  public V2TrezorService(TrezorDeviceManager deviceManager, TrezorEventListener eventListener) {
+  public V2TrezorService(TrezorDeviceManager deviceManager) {
     this.deviceManager = deviceManager;
-    this.trezorEventListener = eventListener;
   }
 
 

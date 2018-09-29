@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.examples.v2;
+package uk.co.froot.trezorjava.examples.v2.service;
 
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
@@ -9,16 +9,15 @@ import uk.co.froot.trezorjava.service.TrezorService;
 import uk.co.froot.trezorjava.service.TrezorServices;
 
 /**
- * <p>Connect to a Trezor using the service API and identify its type.</p>
+ * <p>Connect to a Trezor using the service API and identify its features.</p>
  *
  * @since 0.0.1
  *  
  */
-public class DeviceConnectedExample implements TrezorEventListener {
+public class DeviceFeaturesExample implements TrezorEventListener {
 
-  private static final Logger log = LoggerFactory.getLogger(DeviceConnectedExample.class);
-
-  private TrezorService trezorService;
+  private static final Logger log = LoggerFactory.getLogger(DeviceFeaturesExample.class);
+  private TrezorService service;
 
   /**
    * <p>TrezorServices entry point to the example</p>
@@ -29,9 +28,13 @@ public class DeviceConnectedExample implements TrezorEventListener {
   public static void main(String[] args) throws InterruptedException {
 
     // Create a service and register this as the event listener
-    // TODO Set up the listener after service created
-    TrezorServices.awaitDevice(new DeviceConnectedExample());
+    DeviceFeaturesExample exampleListener = new DeviceFeaturesExample();
+    TrezorService service = TrezorServices.awaitDevice(exampleListener);
+    exampleListener.setService(service);
 
+    service.initialize();
+
+    Thread.sleep(2000);
   }
 
   @Override
@@ -55,12 +58,20 @@ public class DeviceConnectedExample implements TrezorEventListener {
       case DEVICE_CONNECTED:
         log.info("Device has connected. Reading features.");
         // Get some information about the device
-        TrezorMessageManagement.Features features = trezorService.getFeatures();
+        TrezorMessageManagement.Features features = service.getFeatures();
         log.info("Features: {}", features);
 
       default:
         // Ignore
     }
 
+  }
+
+  private void setService(TrezorService service) {
+    this.service = service;
+  }
+
+  public TrezorService getService() {
+    return service;
   }
 }

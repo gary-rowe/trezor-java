@@ -2,7 +2,7 @@ package uk.co.froot.trezorjava.core.internal;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
+import com.satoshilabs.trezor.lib.protobuf.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usb4java.BufferUtils;
@@ -234,7 +234,7 @@ public class TrezorDevice {
       // Allocate the message payload buffer
       messageBuffer = ByteBuffer.allocate(msgSize + 1024);
       messageBuffer.put(readBytes, 9, readBytes.length - 9);
-      messageType = TrezorMessage.MessageType.valueOf(msgId);
+      messageType = TrezorMessage.MessageType.forNumber(msgId);
       break;
     }
 
@@ -278,15 +278,68 @@ public class TrezorDevice {
 
     log.info("Parsing type {} ({} bytes):", messageType, msgData.length);
     try {
-      String className = TrezorMessage.class.getName() + "$" + messageType.name().replace("MessageType_", "");
-      Class cls = Class.forName(className);
-      Method method = cls.getDeclaredMethod("parseFrom", byte[].class);
+      Method method = extractParserMethod(messageType);
       //noinspection PrimitiveArrayArgumentToVariableArgMethod
       return (Message) method.invoke(null, msgData);
     } catch (Exception ex) {
       throw new InvalidProtocolBufferException("Exception while calling: parseMessageFromBytes for MessageType: " + messageType.name());
     }
 
+  }
+
+  /**
+   *
+   * @param messageType The abstract message type
+   * @return
+   * @throws ClassNotFoundException If
+   * @throws NoSuchMethodException
+   */
+  private Method extractParserMethod(TrezorMessage.MessageType messageType) throws ClassNotFoundException, NoSuchMethodException {
+
+    // Identify the expected inner class name
+    String innerClassName = messageType.name().replace("MessageType_", "");
+
+    // Identify the default class name
+    String className = TrezorMessageManagement.class.getName() + "$" + innerClassName;
+
+    // Search for any known sub-groups
+    if (innerClassName.startsWith("Ethereum")) {
+      className = TrezorMessageEthereum.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("NEM")) {
+      className = TrezorMessageNem.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Lisk")) {
+      className = TrezorMessageLisk.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Tezos")) {
+      className = TrezorMessageTezos.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Stellar")) {
+      className = TrezorMessageStellar.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Tron")) {
+      className = TrezorMessageTron.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Cardano")) {
+      className = TrezorMessageCardano.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Ontology")) {
+      className = TrezorMessageOntology.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Ripple")) {
+      className = TrezorMessageRipple.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("Monero")) {
+      className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+    }
+    if (innerClassName.startsWith("DebugMonero")) {
+      className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+    }
+
+    log.debug("Class name: {}", className);
+    Class cls = Class.forName(className);
+    return cls.getDeclaredMethod("parseFrom", byte[].class);
   }
 
 }

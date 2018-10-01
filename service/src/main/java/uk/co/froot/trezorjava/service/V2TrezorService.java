@@ -73,16 +73,16 @@ public class V2TrezorService implements TrezorService {
 //
 //  }
 //
-//  /**
-//   * <p>Clear the device back to factory settings.</p>
-//   */
-//  public void wipeDevice() {
-//
-//    //
-//    context.beginWipeDeviceUseCase();
-//
-//  }
-//
+  /**
+   * <p>Clear the device back to factory settings.</p>
+   */
+  public void wipeDevice() {
+
+    //
+    //deviceManager.fsm().beginWipeDeviceUseCase();
+
+  }
+
 //  /**
 //   * <p>Change or remove the device PIN.</p>
 //   *

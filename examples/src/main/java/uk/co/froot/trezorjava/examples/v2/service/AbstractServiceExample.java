@@ -6,35 +6,11 @@ import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;
 import uk.co.froot.trezorjava.core.events.TrezorEventListener;
 import uk.co.froot.trezorjava.service.TrezorService;
-import uk.co.froot.trezorjava.service.TrezorServices;
 
-/**
- * <p>Connect to a Trezor using the service API and identify its features.</p>
- *
- * @since 0.0.1
- *  
- */
-public class DeviceFeaturesExample implements TrezorEventListener {
+public class AbstractServiceExample  implements TrezorEventListener {
 
-  private static final Logger log = LoggerFactory.getLogger(DeviceFeaturesExample.class);
+  protected static final Logger log = LoggerFactory.getLogger(FeaturesExample.class);
   private TrezorService service;
-
-  /**
-   * <p>TrezorServices entry point to the example</p>
-   *
-   * @param args None required
-   *
-   */
-  public static void main(String[] args) {
-
-    // Create a service and register this as the event listener
-    DeviceFeaturesExample exampleListener = new DeviceFeaturesExample();
-    TrezorService service = TrezorServices.awaitDevice(exampleListener);
-    exampleListener.setService(service);
-
-    service.initialize();
-
-  }
 
   // TODO Hook up the TrezorEvents to receive Features message
   @Override
@@ -67,11 +43,12 @@ public class DeviceFeaturesExample implements TrezorEventListener {
 
   }
 
-  private void setService(TrezorService service) {
+  void setService(TrezorService service) {
     this.service = service;
   }
 
   public TrezorService getService() {
     return service;
   }
+
 }

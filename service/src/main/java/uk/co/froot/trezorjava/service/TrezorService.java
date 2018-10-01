@@ -59,18 +59,18 @@ public interface TrezorService {
 //   */
 //  void changePIN(boolean remove);
 //
-//  /**
-//   * <p>Send the WIPE_DEVICE message to the device. The device will respond by cancelling its pending
-//   * action and clearing the screen. It will also wipe all sensitive data and settings back to factory defaults.</p>
-//   * <p>Expected response events are:</p>
-//   * <ul>
-//   * <li>SUCCESS if the message was acknowledged</li>
-//   * <li>BUTTON_REQUEST if a button press is needed</li>
-//   * </ul>
-//   *
-//   *
-//   */
-//  void wipeDevice();
+  /**
+   * <p>Send the WIPE_DEVICE message to the device. The device will respond by cancelling its pending
+   * action and clearing the screen. It will also wipe all sensitive data and settings back to factory defaults.</p>
+   * <p>Expected response events are:</p>
+   * <ul>
+   * <li>SUCCESS if the message was acknowledged</li>
+   * <li>BUTTON_REQUEST if a button press is needed</li>
+   * </ul>
+   *
+   *
+   */
+  void wipeDevice();
 //
 //  /**
 //   * <p>Send the FIRMWARE_ERASE message to the device.</p>

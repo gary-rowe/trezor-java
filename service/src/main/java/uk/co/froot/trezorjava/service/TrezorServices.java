@@ -26,7 +26,7 @@ public class TrezorServices {
     trezorDeviceManager.awaitDevice();
 
     // Determine the appropriate service based on the device type
-    switch (trezorDeviceManager.context().trezorType()) {
+    switch (trezorDeviceManager.context().getTrezorType()) {
       // TODO Create support for V1 Trezor device via libusb
 //      case V1:
 //        return new V1TrezorService(trezorDeviceManager, trezorEventListener);

@@ -19,6 +19,7 @@ import javax.usb.UsbServices;
 import javax.usb.event.UsbServicesEvent;
 import javax.usb.event.UsbServicesListener;
 
+import static uk.co.froot.trezorjava.core.TrezorDeviceState.*;
 import static uk.co.froot.trezorjava.core.TrezorType.*;
 
 /**
@@ -27,7 +28,7 @@ import static uk.co.froot.trezorjava.core.TrezorType.*;
  *
  * @since 0.0.1
  */
-public class TrezorDeviceManager {
+public class TrezorDeviceManager implements UsbServicesListener {
 
   private static final Logger log = LoggerFactory.getLogger(TrezorDeviceManager.class);
 
@@ -76,7 +77,7 @@ public class TrezorDeviceManager {
    */
   public void awaitDevice() {
     // Wait for a device to be present (blocking)
-    while (!deviceContext.isDeviceAttached()) {
+    while (deviceContext.getDeviceState() != DEVICE_ATTACHED) {
       try {
         // Strike a balance between CPU loading and user responsiveness
         Thread.sleep(400);
@@ -107,7 +108,13 @@ public class TrezorDeviceManager {
     }
 
     try {
-      return trezorDevice.sendMessage(message);
+      Message response = trezorDevice.sendMessage(message);
+
+      // Notify listeners
+      TrezorEvents.notify(new TrezorEvent(this, response));
+
+      return response;
+
     } catch (InvalidProtocolBufferException e) {
       throw new TrezorException("Message sending failed.", e);
     }
@@ -133,70 +140,8 @@ public class TrezorDeviceManager {
   private void initUsbListener() {
 
     // Add a low level USB listener for attachment messages
-    usbServices.addUsbServicesListener(new UsbServicesListener() {
+    usbServices.addUsbServicesListener(this);
 
-      @Override
-      public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
-
-        // Obtain the descriptor
-        UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
-
-        // Attempt to identify the device
-        TrezorType trezorType = identifyTrezorDevice(descriptor);
-
-        if (trezorType != UNKNOWN) {
-          log.debug("Device attached: {}", trezorType);
-
-          // Attempt to open the device
-          if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
-            // Update context
-            deviceContext.setDeviceAttached(true);
-            deviceContext.setTrezorType(trezorType);
-
-            // Notify listeners
-            TrezorEvents.notify(new TrezorEvent(
-              TrezorDeviceState.DEVICE_ATTACHED,
-              TrezorUIState.SHOW_DEVICE_ATTACHED,
-              trezorType,
-              descriptor,
-              null));
-
-          }
-        }
-      }
-
-      @Override
-      public void usbDeviceDetached(UsbServicesEvent usbServicesEvent) {
-
-        // Obtain the descriptor
-        UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
-
-        // Attempt to identify the device
-        TrezorType trezorType = identifyTrezorDevice(descriptor);
-
-        if (trezorType != UNKNOWN) {
-          log.debug("Device detached: {}", trezorType);
-
-          // Update context
-          deviceContext.setDeviceAttached(false);
-          deviceContext.setTrezorType(trezorType);
-
-          // Remove the device from management
-          if (trezorDevice != null) {
-            trezorDevice.close();
-            trezorDevice = null;
-          }
-
-          // Notify listeners
-          TrezorEvents.notify(new TrezorEvent(
-            TrezorDeviceState.DEVICE_DETACHED,
-            TrezorUIState.SHOW_DEVICE_DETACHED,
-            trezorType,
-            descriptor,
-            null));
-        }
-      }
-    });
   }
 
   /**
@@ -278,5 +223,57 @@ public class TrezorDeviceManager {
 
     // Must have a Trezor device to be here
     trezorDevice = new TrezorDevice(handle);
+  }
+
+  @Override
+  public void usbDeviceAttached(UsbServicesEvent usbServicesEvent) {
+
+    // Obtain the descriptor
+    UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
+
+    // Attempt to identify the device
+    TrezorType trezorType = identifyTrezorDevice(descriptor);
+
+    if (trezorType != UNKNOWN) {
+      log.debug("Device attached: {}", trezorType);
+
+      // Attempt to open the device
+      if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
+        // Update context
+        deviceContext.setDeviceState(DEVICE_ATTACHED);
+        deviceContext.setTrezorType(trezorType);
+
+        // Notify listeners
+        TrezorEvents.notify(new TrezorEvent(this, null));
+
+      }
+    }
+  }
+
+  @Override
+  public void usbDeviceDetached(UsbServicesEvent usbServicesEvent) {
+
+    // Obtain the descriptor
+    UsbDeviceDescriptor descriptor = usbServicesEvent.getUsbDevice().getUsbDeviceDescriptor();
+
+    // Attempt to identify the device
+    TrezorType trezorType = identifyTrezorDevice(descriptor);
+
+    if (trezorType != UNKNOWN) {
+      log.debug("Device detached: {}", trezorType);
+
+      // Update context
+      deviceContext.setDeviceState(DEVICE_DETACHED);
+      deviceContext.setTrezorType(trezorType);
+
+      // Remove the device from management
+      if (trezorDevice != null) {
+        trezorDevice.close();
+        trezorDevice = null;
+      }
+
+      // Notify listeners
+      TrezorEvents.notify(new TrezorEvent(this, null));
+    }
   }
 }

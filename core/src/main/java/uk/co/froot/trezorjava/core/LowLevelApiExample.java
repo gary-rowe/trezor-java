@@ -30,7 +30,7 @@ public class LowLevelApiExample {
     // Blocking method until a device is attached
     trezorDeviceManager.awaitDevice();
 
-    System.out.println("\n"+ConsoleUtils.ANSI_GREEN + "Trezor attached: " + ConsoleUtils.ANSI_RESET + "\n" + trezorDeviceManager.context().trezorType().name());
+    System.out.println("\n"+ConsoleUtils.ANSI_GREEN + "Trezor attached: " + ConsoleUtils.ANSI_RESET + "\n" + trezorDeviceManager.context().getTrezorType().name());
 
     // Read commands and execute them
     System.out.println("\nPlease use the menu below to explore.\n");

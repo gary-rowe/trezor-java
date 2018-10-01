@@ -2,37 +2,63 @@ package uk.co.froot.trezorjava.core;
 
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 
+import static uk.co.froot.trezorjava.core.TrezorDeviceState.DEVICE_ATTACHED;
+import static uk.co.froot.trezorjava.core.TrezorDeviceState.DEVICE_DETACHED;
+
 /**
  * <p>Provides metadata about the current Trezor device (connection status, device type etc).</p>
  */
 public class TrezorContext {
 
   // These must be volatile due to the nature of the polling mechanism
-  private volatile boolean deviceAttached = false;
   private volatile TrezorType trezorType = TrezorType.UNKNOWN;
   private volatile TrezorMessageManagement.Features features = null;
+  private volatile TrezorDeviceState deviceState = DEVICE_DETACHED;
+  private volatile TrezorUIState uiState = TrezorUIState.SHOW_DEVICE_DETACHED;
 
   /**
    * Clear all fields back to a detached state.
    */
   public void reset() {
-    deviceAttached = false;
     trezorType = TrezorType.UNKNOWN;
     features = null;
+    deviceState = DEVICE_DETACHED;
+    uiState = TrezorUIState.SHOW_DEVICE_DETACHED;
   }
 
   /**
-   * @param deviceAttached True if a Trezor device is attached and opened for USB communication.
+   * @return The device state indicating connectivity at the hardware level.
    */
-  public void setDeviceAttached(boolean deviceAttached) {
-    this.deviceAttached = deviceAttached;
+  public TrezorDeviceState getDeviceState() {
+    return deviceState;
   }
 
   /**
-   * @return True if a Trezor device is attached and opened for USB communication.
+   * @param deviceState The new device state.
    */
-  public boolean isDeviceAttached() {
-    return deviceAttached;
+  public void setDeviceState(TrezorDeviceState deviceState) {
+    this.deviceState = deviceState;
+  }
+
+  /**
+   * @return The UI state describing what screen the user should be interacting with.
+   */
+  public TrezorUIState getUiState() {
+    return uiState;
+  }
+
+  /**
+   * @param uiState The new UI state.
+   */
+  public void setUiState(TrezorUIState uiState) {
+    this.uiState = uiState;
+  }
+
+  /**
+   * @return The Trezor type.
+   */
+  public TrezorType getTrezorType() {
+    return trezorType;
   }
 
   /**
@@ -40,13 +66,6 @@ public class TrezorContext {
    */
   public void setTrezorType(TrezorType trezorType) {
     this.trezorType = trezorType;
-  }
-
-  /**
-   * @return The Trezor type.
-   */
-  public TrezorType trezorType() {
-    return trezorType;
   }
 
   /**
@@ -58,7 +77,7 @@ public class TrezorContext {
       return false;
     }
     // A device is initialised if it is both attached and Features indicate the case
-    return isDeviceAttached() && features.isInitialized();
+    return deviceState == DEVICE_ATTACHED && features.isInitialized();
   }
 
   /**

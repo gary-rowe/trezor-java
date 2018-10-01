@@ -1,63 +1,30 @@
 package uk.co.froot.trezorjava.core.events;
 
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessage;
-import uk.co.froot.trezorjava.core.TrezorDeviceState;
-import uk.co.froot.trezorjava.core.TrezorType;
-import uk.co.froot.trezorjava.core.TrezorUIState;
-
-import javax.usb.UsbDeviceDescriptor;
+import com.google.protobuf.Message;
+import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 
 public class TrezorEvent {
 
-  private final TrezorUIState uiState;
-  private final TrezorDeviceState deviceState;
-  private final TrezorType trezorType;
-  private final UsbDeviceDescriptor usbDeviceDescriptor;
-  private TrezorMessage trezorMessage = null;
+  private final Message message;
+  private final TrezorDeviceManager deviceManagaer;
 
-  public TrezorEvent(TrezorDeviceState deviceState,
-                     TrezorUIState uiState,
-                     TrezorType trezorType,
-                     UsbDeviceDescriptor usbDeviceDescriptor,
-                     TrezorMessage trezorMessage) {
-    this.deviceState = deviceState;
-    this.trezorType = trezorType;
-    this.usbDeviceDescriptor = usbDeviceDescriptor;
-    this.uiState = uiState;
-    this.trezorMessage = trezorMessage;
+  public TrezorEvent(TrezorDeviceManager deviceManager, Message message) {
+    this.deviceManagaer = deviceManager;
+    this.message = message;
   }
 
   /**
-   * @return The Trezor UI state when this event was generated.
+   * @return The Trezor device manager giving access to more detailed information.
    */
-  public TrezorUIState getUIState() {
-    return uiState;
+  public TrezorDeviceManager getDeviceManager() {
+    return deviceManagaer;
   }
 
   /**
-   * @return The Trezor device state when this event was generated.
+   * @return The low level message triggering this event. If noll then the device connection state has changed.
    */
-  public TrezorDeviceState getDeviceState() { return deviceState; }
-
-  /**
-   * @return The type of Trezor device generating this event.
-   */
-  public TrezorType getTrezorType() {
-    return trezorType;
-  }
-
-  /**
-   * @return The low level Trezor message triggering this event.
-   */
-  public TrezorMessage getTrezorMessasge() {
-    return trezorMessage;
-  }
-
-  /**
-   * @return The low level USB descriptor for more information on the device.
-   */
-  public UsbDeviceDescriptor getUsbDeviceDescriptor() {
-    return usbDeviceDescriptor;
+  public Message getMessage() {
+    return message;
   }
 
 }

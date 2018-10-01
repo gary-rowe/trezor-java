@@ -28,7 +28,7 @@ public class DeviceConnectedExample {
     // Blocks until a device is attached
     trezorDeviceManager.awaitDevice();
 
-    log.info("Device attached is {}", trezorDeviceManager.context().trezorType());
+    log.info("Device attached is {}", trezorDeviceManager.context().getTrezorType());
 
   }
 

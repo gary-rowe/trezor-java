@@ -25,7 +25,7 @@ public class DeviceFeaturesExample implements TrezorEventListener {
    * @param args None required
    *
    */
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) {
 
     // Create a service and register this as the event listener
     DeviceFeaturesExample exampleListener = new DeviceFeaturesExample();
@@ -34,15 +34,14 @@ public class DeviceFeaturesExample implements TrezorEventListener {
 
     service.initialize();
 
-    Thread.sleep(2000);
   }
 
   // TODO Hook up the TrezorEvents to receive Features message
   @Override
   public void onTrezorEvent(TrezorEvent event) {
-    log.debug("Received Trezor event: '{}'", event.getUIState().name());
+    log.debug("Received message event: '{}'", event.getMessage());
 
-    switch (event.getDeviceState()) {
+    switch (event.getDeviceManager().context().getDeviceState()) {
       case DEVICE_FAILED:
         // Treat as end of example
         log.info("Device has failed. Exiting.");

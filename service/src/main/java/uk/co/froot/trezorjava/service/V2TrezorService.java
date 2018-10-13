@@ -4,6 +4,8 @@ import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
+import uk.co.froot.trezorjava.service.fsm.InitializedState;
+import uk.co.froot.trezorjava.service.fsm.ManagementFSM;
 
 /**
  * <p>Service to provide the following to application:</p>
@@ -22,12 +24,14 @@ public class V2TrezorService implements TrezorService {
 
   private static final Logger log = LoggerFactory.getLogger(V2TrezorService.class);
   private final TrezorDeviceManager deviceManager;
+  private final ManagementFSM managementFSM;
 
   /**
    * @param deviceManager The Trezor device manager for low level communications.
    */
   public V2TrezorService(TrezorDeviceManager deviceManager) {
     this.deviceManager = deviceManager;
+    managementFSM = new ManagementFSM(deviceManager);
   }
 
 
@@ -41,8 +45,7 @@ public class V2TrezorService implements TrezorService {
   @Override
   public void initialize() {
 
-    TrezorMessageManagement.Initialize message = TrezorMessageManagement.Initialize.newBuilder().build();
-    deviceManager.sendMessage(message);
+    managementFSM.transitionTo(new InitializedState());
 
   }
 
@@ -59,27 +62,26 @@ public class V2TrezorService implements TrezorService {
     return deviceManager.context().getFeatures();
   }
 
-//  /**
-//   * <p>Cancel the current operation and return to the initialised state.</p>
-//   *
-//   * <p>This will trigger a SHOW_OPERATION_FAILED and a DEVICE_READY event during the reset phase.</p>
-//   *
-//   * @throws TrezorException If something goes wrong.
-//   */
-//  public void cancel() {
-//
-//    TrezorMessageManagement.Cancel message = TrezorMessageManagement.Cancel.newBuilder().build();
-//    deviceManager.sendMessage(message);
-//
-//  }
-//
+  /**
+   * <p>Cancel the current operation and return to the initialised state.</p>
+   *
+   * <p>This will trigger a SHOW_OPERATION_FAILED and a DEVICE_READY event during the reset phase.</p>
+   *
+   */
+  public void cancel() {
+
+    TrezorMessageManagement.Cancel message = TrezorMessageManagement.Cancel.newBuilder().build();
+    deviceManager.sendMessage(message);
+
+  }
+
   /**
    * <p>Clear the device back to factory settings.</p>
    */
   public void wipeDevice() {
 
-    //
-    //deviceManager.fsm().beginWipeDeviceUseCase();
+    // Start the wipe device use case
+    //managementFSM.transitionTo();
 
   }
 

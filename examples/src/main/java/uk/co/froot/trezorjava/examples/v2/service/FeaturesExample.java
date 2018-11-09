@@ -1,5 +1,7 @@
 package uk.co.froot.trezorjava.examples.v2.service;
 
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
+import uk.co.froot.trezorjava.core.events.TrezorEvent;
 import uk.co.froot.trezorjava.service.TrezorService;
 import uk.co.froot.trezorjava.service.TrezorServices;
 
@@ -17,14 +19,24 @@ public class FeaturesExample extends AbstractServiceExample {
    * @param args None required
    *
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
 
     // Create a service and register this as the event listener
     FeaturesExample exampleListener = new FeaturesExample();
     TrezorService service = TrezorServices.awaitDevice(exampleListener);
     exampleListener.setService(service);
 
-    service.initialize();
+    // Features are gathered automatically on connection
+    // so can be obtained after events are issued
+    Thread.sleep(2_000);
+  }
+
+  @Override
+  void internalOnTrezorEvent(TrezorEvent event) {
+
+    // Request features
+    TrezorMessageManagement.Features features = getService().features();
+    log.info("Features: {}", features.getLabel());
 
   }
 

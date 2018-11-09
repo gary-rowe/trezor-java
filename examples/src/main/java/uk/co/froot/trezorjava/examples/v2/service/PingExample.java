@@ -1,31 +1,39 @@
 package uk.co.froot.trezorjava.examples.v2.service;
 
+import uk.co.froot.trezorjava.core.events.TrezorEvent;
 import uk.co.froot.trezorjava.service.TrezorService;
 import uk.co.froot.trezorjava.service.TrezorServices;
 
 /**
- * <p>Connect to a Trezor using the service API and identify its features.</p>
+ * <p>Connect to a Trezor using the service API and send a ping. Await response.</p>
  *
  * @since 0.0.1
  *  
  */
-public class FeaturesExample extends AbstractServiceExample {
+public class PingExample extends AbstractServiceExample {
 
   /**
    * <p>TrezorServices entry point to the example</p>
    *
-   * @param args None required
+   * @param args None required.
    *
    */
   public static void main(String[] args) {
 
     // Create a service and register this as the event listener
-    FeaturesExample exampleListener = new FeaturesExample();
+    PingExample exampleListener = new PingExample();
     TrezorService service = TrezorServices.awaitDevice(exampleListener);
     exampleListener.setService(service);
 
-    service.features();
+    // Start the ping
+    service.ping();
 
   }
 
+  @Override
+  void internalOnTrezorEvent(TrezorEvent event) {
+
+    log.debug(event.toString());
+
+  }
 }

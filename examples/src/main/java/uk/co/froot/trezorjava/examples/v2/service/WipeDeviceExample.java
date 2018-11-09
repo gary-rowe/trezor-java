@@ -1,5 +1,6 @@
 package uk.co.froot.trezorjava.examples.v2.service;
 
+import uk.co.froot.trezorjava.core.events.TrezorEvent;
 import uk.co.froot.trezorjava.service.TrezorService;
 import uk.co.froot.trezorjava.service.TrezorServices;
 
@@ -19,16 +20,20 @@ public class WipeDeviceExample extends AbstractServiceExample {
    */
   public static void main(String[] args) {
 
-    // Create a service and register this as the event listener
+    // Create a service and register this as the event listener.
     WipeDeviceExample exampleListener = new WipeDeviceExample();
     TrezorService service = TrezorServices.awaitDevice(exampleListener);
     exampleListener.setService(service);
 
-    // Initialise
-    service.initialize();
-
-    // Wipe
+    // Request device wipe.
     service.wipeDevice();
+
+  }
+
+  @Override
+  void internalOnTrezorEvent(TrezorEvent event) {
+
+    log.debug(event.toString());
 
   }
 

@@ -32,7 +32,7 @@ public interface TrezorService {
   /**
    * @return The current features of the connected device, or null if not present.
    */
-  TrezorMessageManagement.Features getFeatures();
+  TrezorMessageManagement.Features features();
 
 //  /**
 //   * <p>Send the CLEAR_SESSION message to the device.</p>

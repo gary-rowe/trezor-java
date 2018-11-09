@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.service.fsm.InitializedState;
 import uk.co.froot.trezorjava.service.fsm.ManagementFSM;
+import uk.co.froot.trezorjava.service.fsm.ManagementUseCase;
 
 /**
  * <p>Service to provide the following to application:</p>
@@ -24,7 +25,10 @@ public class V2TrezorService implements TrezorService {
 
   private static final Logger log = LoggerFactory.getLogger(V2TrezorService.class);
   private final TrezorDeviceManager deviceManager;
+
+  // Management state transitions
   private final ManagementFSM managementFSM;
+  private ManagementUseCase managementUseCase = ManagementUseCase.ATTACH_DEVICE_BEGIN;
 
   /**
    * @param deviceManager The Trezor device manager for low level communications.
@@ -33,7 +37,6 @@ public class V2TrezorService implements TrezorService {
     this.deviceManager = deviceManager;
     managementFSM = new ManagementFSM(deviceManager);
   }
-
 
   /**
    * @return The Trezor device manager in use.
@@ -45,6 +48,8 @@ public class V2TrezorService implements TrezorService {
   @Override
   public void initialize() {
 
+    managementUseCase = ManagementUseCase.ATTACH_DEVICE_BEGIN;
+
     managementFSM.transitionTo(new InitializedState());
 
   }
@@ -52,13 +57,14 @@ public class V2TrezorService implements TrezorService {
   @Override
   public void ping() {
 
+    // A Ping can be sent in any state
     TrezorMessageManagement.Ping message = TrezorMessageManagement.Ping.newBuilder().setMessage("Pong!").build();
     deviceManager.sendMessage(message);
 
   }
 
   @Override
-  public TrezorMessageManagement.Features getFeatures() {
+  public TrezorMessageManagement.Features features() {
     return deviceManager.context().getFeatures();
   }
 

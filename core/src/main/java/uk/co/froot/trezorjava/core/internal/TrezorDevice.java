@@ -3,6 +3,7 @@ package uk.co.froot.trezorjava.core.internal;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.*;
+import hw.trezor.messages.common.MessagesCommon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usb4java.BufferUtils;
@@ -300,46 +301,66 @@ public class TrezorDevice {
     // Identify the expected inner class name
     String innerClassName = messageType.name().replace("MessageType_", "");
 
-    // Identify the default class name
-    String outerClassName = TrezorMessageManagement.class.getName() + "$" + innerClassName;
+    // Identify enclosing class by name
+    String className;
+    if (innerClassName.equals("ButtonAck")
+      || innerClassName.equals("ButtonRequest")
+      || innerClassName.equals("Failure")
+      || innerClassName.equals("HDNodeType")
+      || innerClassName.equals("PassphraseAck")
+      || innerClassName.equals("PassphraseRequest")
+      || innerClassName.equals("PassphraseStateAck")
+      || innerClassName.equals("PassphraseStateRequest")
+      || innerClassName.equals("PinMatrixAck")
+      || innerClassName.equals("PinMatrixRequest")
+      || innerClassName.equals("Success")
+    ) {
+      // Use common classes
+      className = MessagesCommon.class.getName() + "$" + innerClassName;
+    } else {
+      // Use management class as default then check if inner class indicates another
+      className = TrezorMessageManagement.class.getName() + "$" + innerClassName;
 
-    // Search for any known sub-groups and adjust the outer class name accordingly
-    if (innerClassName.startsWith("Ethereum")) {
-      outerClassName = TrezorMessageEthereum.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("NEM")) {
-      outerClassName = TrezorMessageNem.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Lisk")) {
-      outerClassName = TrezorMessageLisk.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Tezos")) {
-      outerClassName = TrezorMessageTezos.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Stellar")) {
-      outerClassName = TrezorMessageStellar.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Tron")) {
-      outerClassName = TrezorMessageTron.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Cardano")) {
-      outerClassName = TrezorMessageCardano.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Ontology")) {
-      outerClassName = TrezorMessageOntology.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Ripple")) {
-      outerClassName = TrezorMessageRipple.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("Monero")) {
-      outerClassName = TrezorMessageMonero.class.getName() + "$" + innerClassName;
-    }
-    if (innerClassName.startsWith("DebugMonero")) {
-      outerClassName = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+      // Search for any known sub-groups and adjust the outer class name accordingly
+      if (innerClassName.startsWith("Ethereum")) {
+        className = TrezorMessageEthereum.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("NEM")) {
+        className = TrezorMessageNem.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Lisk")) {
+        className = TrezorMessageLisk.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Tezos")) {
+        className = TrezorMessageTezos.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Stellar")) {
+        className = TrezorMessageStellar.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Tron")) {
+        className = TrezorMessageTron.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Cardano")) {
+        className = TrezorMessageCardano.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Ontology")) {
+        className = TrezorMessageOntology.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Ripple")) {
+        className = TrezorMessageRipple.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("Monero")) {
+        className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+      }
+      if (innerClassName.startsWith("DebugMonero")) {
+        className = TrezorMessageMonero.class.getName() + "$" + innerClassName;
+      }
     }
 
-    log.debug("Class name: {}", outerClassName);
-    Class cls = Class.forName(outerClassName);
+    log.debug("Expected class name: {}", className);
+    Class cls = Class.forName(className);
+
+    log.debug("Found class, attempting to parse bytes");
     return cls.getDeclaredMethod("parseFrom", byte[].class);
   }
 

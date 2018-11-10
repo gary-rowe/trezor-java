@@ -235,7 +235,6 @@ public class TrezorDeviceManager implements UsbServicesListener {
     TrezorType trezorType = identifyTrezorDevice(descriptor);
 
     if (trezorType != UNKNOWN) {
-      log.debug("Device attached: {}", trezorType);
 
       // Attempt to open the device
       if (tryOpenDevice(trezorType, descriptor.idVendor(), descriptor.idProduct())) {
@@ -246,6 +245,7 @@ public class TrezorDeviceManager implements UsbServicesListener {
         // Notify listeners
         TrezorEvents.notify(new TrezorEvent(this, null));
 
+        log.debug("Device attached: {}", trezorType);
       }
     }
   }

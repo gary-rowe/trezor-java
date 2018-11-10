@@ -8,32 +8,30 @@ import uk.co.froot.trezorjava.service.TrezorService;
 
 public abstract class AbstractServiceExample  implements TrezorEventListener {
 
-  static final Logger log = LoggerFactory.getLogger(FeaturesExample.class);
+  static final Logger log = LoggerFactory.getLogger(AbstractServiceExample.class);
   private TrezorService service;
 
   @Override
   public void onTrezorEvent(TrezorEvent event) {
-
-    log.debug("Received message event: '{}'", event.getMessage());
 
     // Provide default handle of common events.
     // Hand over to implementation specific handling.
     switch (event.getDeviceManager().context().getDeviceState()) {
       case DEVICE_FAILED:
         // Treat as end of example
-        log.info("Device has failed. Exiting.");
+        log.error("Device has failed. Exiting.");
         System.exit(0);
         break;
       case DEVICE_DETACHED:
         // Can simply wait for another device to be connected again
-        log.info("Device has detached. Waiting.");
+        log.debug("Device has detached. Waiting.");
         break;
       case DEVICE_ATTACHED:
-        // Low level handler will automatically transition to Connected if possible
-        log.info("Device has attached. Expecting a connection attempt.");
+        log.debug("Device has attached.");
+        internalOnTrezorEvent(event);
         break;
       case DEVICE_CONNECTED:
-        log.info("Device has connected.");
+        log.debug("Device has connected.");
         internalOnTrezorEvent(event);
         break;
       default:

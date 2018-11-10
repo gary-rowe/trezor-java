@@ -21,6 +21,7 @@ public class TrezorServices {
   public static TrezorService awaitDevice(TrezorEventListener trezorEventListener) throws TrezorException {
 
     TrezorDeviceManager trezorDeviceManager = new TrezorDeviceManager();
+    TrezorEvents.register(trezorEventListener);
 
     // Blocks until a device is attached
     trezorDeviceManager.awaitDevice();
@@ -31,10 +32,8 @@ public class TrezorServices {
 //      case V1:
 //        return new V1TrezorService(trezorDeviceManager, trezorEventListener);
       case V2_FACTORY:
-        TrezorEvents.register(trezorEventListener);
         return new V2TrezorService(trezorDeviceManager);
       case V2:
-        TrezorEvents.register(trezorEventListener);
         return new V2TrezorService(trezorDeviceManager);
       default:
         throw new TrezorException("Unknown Trezor device attached.");

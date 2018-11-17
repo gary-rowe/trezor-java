@@ -23,6 +23,10 @@ public class PingExample extends AbstractServiceExample {
     // Create a service and register this as the event listener
     PingExample exampleListener = new PingExample();
     TrezorService service = TrezorServices.awaitDevice(exampleListener);
+
+    // Example code starts here
+
+    // Examples maintain a reference to the service in addition to being listeners
     exampleListener.setService(service);
 
     // Start the ping

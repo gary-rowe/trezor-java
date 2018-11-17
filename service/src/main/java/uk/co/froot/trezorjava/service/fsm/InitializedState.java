@@ -4,15 +4,21 @@ import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 
 /**
- * The device
+ * The device needs to return to the initialized state, cancelling any current operation.
  */
 public class InitializedState extends AbstractManagementState {
 
-  public void enter(TrezorDeviceManager deviceManager) {
+  @Override
+  public void doEnter(TrezorDeviceManager deviceManager) {
 
+    // Send the Initialize message to the device
     TrezorMessageManagement.Initialize message = TrezorMessageManagement.Initialize.newBuilder().build();
     deviceManager.sendMessage(message);
 
+  }
+
+  @Override
+  public void doExit(TrezorDeviceManager deviceManager) {
 
   }
 }

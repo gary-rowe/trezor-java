@@ -6,10 +6,10 @@ import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 public class TrezorEvent {
 
   private final Message message;
-  private final TrezorDeviceManager deviceManagaer;
+  private final TrezorDeviceManager trezorDeviceManager;
 
   public TrezorEvent(TrezorDeviceManager deviceManager, Message message) {
-    this.deviceManagaer = deviceManager;
+    this.trezorDeviceManager = deviceManager;
     this.message = message;
   }
 
@@ -17,7 +17,7 @@ public class TrezorEvent {
    * @return The Trezor device manager giving access to more detailed information.
    */
   public TrezorDeviceManager getDeviceManager() {
-    return deviceManagaer;
+    return trezorDeviceManager;
   }
 
   /**

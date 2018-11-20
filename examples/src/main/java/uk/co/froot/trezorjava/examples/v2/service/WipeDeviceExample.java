@@ -20,12 +20,19 @@ public class WipeDeviceExample extends AbstractServiceExample {
    */
   public static void main(String[] args) {
 
-    // Create a service and register this as the event listener.
+    // Create a service and register this as the event listener
     WipeDeviceExample exampleListener = new WipeDeviceExample();
     TrezorService service = TrezorServices.awaitDevice(exampleListener);
+
+    // Example code starts here
+
+    // Examples maintain a reference to the service in addition to being listeners
     exampleListener.setService(service);
 
-    // Request device wipe.
+    // Service FSM will not have received the attached message so needs to be initialized
+    service.initialize();
+
+    // Start the wipe device use case
     service.wipeDevice();
 
   }
@@ -33,7 +40,9 @@ public class WipeDeviceExample extends AbstractServiceExample {
   @Override
   void internalOnTrezorEvent(TrezorEvent event) {
 
-    log.debug(event.toString());
+    // Features are only available after an initial handshake has taken place
+    // so we filter accordingly
+   log.info("Device event with state: {}", event.getDeviceManager().context().getDeviceState());
 
   }
 

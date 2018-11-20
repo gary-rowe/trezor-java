@@ -1,26 +1,27 @@
 package uk.co.froot.trezorjava.service.fsm;
 
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
+import hw.trezor.messages.common.MessagesCommon;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;
 
 /**
- * The device needs to return to the initialized state, cancelling any current operation.
+ * Wipe device use case.
+ *
+ * The wipe has been requested and a button press requested.
  */
-public class InitializedState extends AbstractManagementState {
-
+public class ConfirmWipeDeviceState extends AbstractManagementState {
   @Override
   public void doEnter(TrezorDeviceManager deviceManager) {
 
     // Send the Initialize message to the device
-    TrezorMessageManagement.Initialize message = TrezorMessageManagement.Initialize.newBuilder().build();
+    MessagesCommon.ButtonAck message = MessagesCommon.ButtonAck.newBuilder().build();
     deviceManager.sendMessage(message);
 
   }
 
   @Override
   public void doExit(TrezorDeviceManager deviceManager) {
-
+    // Do nothing
   }
 
   @Override

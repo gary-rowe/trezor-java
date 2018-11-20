@@ -36,6 +36,12 @@ public class ManagementFSM implements TrezorEventListener {
    */
   public void transitionTo(ManagementState newState) {
 
+    // Check if we are returning to the same state to avoid loops
+    if (newState.getClass().getName().equals(currentState.getClass().getName())) {
+      // Do nothing
+      return;
+    }
+
     // Exit the previous state, update and enter the new one.
     currentState.exit(deviceManager);
     currentState = newState;
@@ -47,26 +53,36 @@ public class ManagementFSM implements TrezorEventListener {
   public void onTrezorEvent(TrezorEvent event) {
 
     // Ensure this event is for us.
-    if (event.getDeviceManager() == deviceManager) {
-      // Provide default handle of common events.
-      switch (event.getDeviceManager().context().getDeviceState()) {
-        case DEVICE_FAILED:
-          // Treat as detached.
-          transitionTo(new DetachedState());
-          break;
-        case DEVICE_DETACHED:
-          // Can simply wait for another device to be connected again
-          transitionTo(new DetachedState());
-          break;
-        case DEVICE_ATTACHED:
-          break;
-        case DEVICE_CONNECTED:
-          break;
-        default:
-          log.info("Unexpected message from device. Exiting.");
-      }
+    if (event.getDeviceManager() != deviceManager) {
+      // Ignore
+      return;
     }
 
+    // Check for common failure messages
+    switch (event.getDeviceManager().context().getDeviceState()) {
+      case DEVICE_FAILED:
+        // Treat as detached.
+        transitionTo(new DetachedState());
+        break;
+      case DEVICE_DETACHED:
+        // Can simply wait for another device to be connected again
+        transitionTo(new DetachedState());
+        break;
+      case DEVICE_ATTACHED:
+        // Do nothing and return
+        return;
+      case DEVICE_CONNECTED:
+        // Do nothing and proceed
+        break;
+      default:
+        // Failure - report and return
+        log.warn("Unexpected message from device.");
+        return;
+    }
+
+    // Must be connected to be here so use the current state to
+    // determine the next one based on the event
+    transitionTo(currentState.lookupStateByEvent(event));
 
   }
 }

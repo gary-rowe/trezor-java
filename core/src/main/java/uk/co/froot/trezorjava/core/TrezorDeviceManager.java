@@ -2,7 +2,6 @@ package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usb4java.DeviceHandle;
@@ -19,6 +18,9 @@ import javax.usb.UsbHostManager;
 import javax.usb.UsbServices;
 import javax.usb.event.UsbServicesEvent;
 import javax.usb.event.UsbServicesListener;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static uk.co.froot.trezorjava.core.TrezorDeviceState.*;
 import static uk.co.froot.trezorjava.core.TrezorType.*;
@@ -49,6 +51,11 @@ public class TrezorDeviceManager implements UsbServicesListener {
    * The Trezor device context.
    */
   private final TrezorContext deviceContext = new TrezorContext();
+
+  /**
+   * The executor to handle USb polling for reading data.
+   */
+  private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   /**
    * Creates the manager wrapper for the device and initialises appropriate USB libraries.
@@ -100,29 +107,19 @@ public class TrezorDeviceManager implements UsbServicesListener {
    *
    * @throws TrezorException If something goes wrong.
    */
-  public Message sendMessage(Message message) throws TrezorException {
+  public void sendMessage(Message message) throws TrezorException {
 
     // Fail fast
     if (trezorDevice == null) {
       log.warn("Device is not present");
-      return null;
+      return;
     }
 
     try {
-      Message response = trezorDevice.sendMessage(message);
+      trezorDevice.sendMessage(message);
 
       // Device is connected if a message gets through
       deviceContext.setDeviceState(DEVICE_CONNECTED);
-
-      // Update context before event notification
-      if (response instanceof TrezorMessageManagement.Features) {
-        deviceContext.setFeatures((TrezorMessageManagement.Features) response);
-      }
-
-      // Notify listeners
-      TrezorEvents.notify(new TrezorEvent(this, response));
-
-      return response;
 
     } catch (InvalidProtocolBufferException e) {
       // Device has failed if a message fails
@@ -142,7 +139,15 @@ public class TrezorDeviceManager implements UsbServicesListener {
    * Clean up libusb resources.
    */
   public void close() {
+    log.info("Closing...");
+    executor.shutdownNow();
+    try {
+      executor.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      // Do nothing
+    }
     LibUsb.exit(null);
+    log.info("Closed");
   }
 
   /**
@@ -253,10 +258,40 @@ public class TrezorDeviceManager implements UsbServicesListener {
         deviceContext.setDeviceState(DEVICE_ATTACHED);
         deviceContext.setTrezorType(trezorType);
 
+        final TrezorDeviceManager self = this;
+
         // Notify listeners
-        TrezorEvents.notify(new TrezorEvent(this, null));
+        TrezorEvents.notify(new TrezorEvent(self, null));
 
         log.debug("Device attached: {}", trezorType);
+
+        // Start the read polling mechanism
+        executor.scheduleAtFixedRate(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              // LibUsb will wait for 400ms for a message
+              Message message = trezorDevice.receiveMessage();
+
+              if (message != null) {
+                // Notify others of the event
+                TrezorEvents.notify(new TrezorEvent(self, message));
+              }
+
+
+            } catch (InvalidProtocolBufferException e) {
+              e.printStackTrace();
+            }
+
+
+          }
+        },
+          500, // Wait for device to wake up before attempting to read
+          500, // Allow for a 400ms timeout when reading
+          TimeUnit.MILLISECONDS
+        );
+
+
       }
     }
   }

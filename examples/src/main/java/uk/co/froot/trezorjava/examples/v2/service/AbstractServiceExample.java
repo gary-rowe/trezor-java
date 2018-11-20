@@ -24,14 +24,12 @@ public abstract class AbstractServiceExample  implements TrezorEventListener {
         break;
       case DEVICE_DETACHED:
         // Can simply wait for another device to be connected again
-        log.debug("Device has detached. Waiting.");
+        log.info("Device has detached. Waiting.");
         break;
       case DEVICE_ATTACHED:
-        log.debug("Device has attached.");
         internalOnTrezorEvent(event);
         break;
       case DEVICE_CONNECTED:
-        log.debug("Device has connected.");
         internalOnTrezorEvent(event);
         break;
       default:

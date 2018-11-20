@@ -42,8 +42,9 @@ public class TrezorDevice {
 
   /**
    * USB communication timeout in milliseconds.
+   *
    */
-  private static final int TIMEOUT = 3000;
+  private static final int TIMEOUT = 400;
 
   /**
    * USB device handle.
@@ -58,21 +59,35 @@ public class TrezorDevice {
   }
 
   /**
-   * Send a message to the device.
+   * Send a message to the device. The response will be contained in an asynchronous read
+   * operation and delivered via the TrezorEvents mechanism.
    *
    * @param message The protobuf message to send.
    *
-   * @return The decoded protobuf message given in response.
    */
-  public Message sendMessage(Message message) throws InvalidProtocolBufferException {
+  public void sendMessage(Message message) throws InvalidProtocolBufferException {
     if (deviceHandle == null)
       throw new IllegalStateException("sendMessage: usbConnection already closed, cannot send message");
 
     // Write the message
     messageWrite(message);
 
-    // Immediately block for a response
+  }
+
+  /**
+   * Check the device data buffer using a blocking approach. It is expected that the upstream
+   * caller will handle event distribution.
+   *
+   * @return The protobuf message that was read or null if nothing is present/timeout.
+   *
+   */
+  public Message receiveMessage() throws InvalidProtocolBufferException {
+    if (deviceHandle == null)
+      throw new IllegalStateException("receiveMessage: usbConnection already closed, cannot receive message");
+
+    // Attempt a read
     return messageRead();
+
   }
 
   /**
@@ -193,6 +208,10 @@ public class TrezorDevice {
         transferred,
         TIMEOUT
       );
+      // Allow polling to timeout when there is no data
+      if (result == LibUsb.ERROR_TIMEOUT) {
+        return null;
+      }
       if (result != LibUsb.SUCCESS) {
         throw new LibUsbException("Unable to read data", result);
       }

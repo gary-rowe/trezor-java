@@ -9,6 +9,8 @@ public class AttachedState extends AbstractManagementState {
   @Override
   public void doEnter(TrezorDeviceManager deviceManager) {
 
+    // Do nothing - the FSM will trigger a transition
+
   }
 
   @Override

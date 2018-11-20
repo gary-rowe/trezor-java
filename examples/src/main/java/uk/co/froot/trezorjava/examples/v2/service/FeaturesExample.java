@@ -31,6 +31,7 @@ public class FeaturesExample extends AbstractServiceExample {
     // Examples maintain a reference to the service in addition to being listeners
     exampleListener.setService(service);
 
+    // Service FSM will not have received the attached message so needs to be initialized
     service.initialize();
   }
 
@@ -42,7 +43,7 @@ public class FeaturesExample extends AbstractServiceExample {
     if (event.getDeviceManager().context().getDeviceState() == TrezorDeviceState.DEVICE_CONNECTED) {
       // Request features
       TrezorMessageManagement.Features features = getService().features();
-      log.info("Features: {}", features.getLabel());
+      log.info("Features:\n{}", features);
     } else {
       log.info("Device event with state: {}", event.getDeviceManager().context().getDeviceState());
     }

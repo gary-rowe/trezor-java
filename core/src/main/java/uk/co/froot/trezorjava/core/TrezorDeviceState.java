@@ -24,10 +24,6 @@ public enum TrezorDeviceState {
    * A device is connected (device present and communications established at the wire level).
    */
   DEVICE_CONNECTED,
-  /**
-   * A device is disconnected (device present and communications were established at the wire level but they are now blocked).
-   */
-  DEVICE_DISCONNECTED,
 
   // End of enum
   ;

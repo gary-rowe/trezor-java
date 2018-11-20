@@ -2,6 +2,7 @@ package uk.co.froot.trezorjava.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
+import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.usb4java.DeviceHandle;
@@ -110,12 +111,22 @@ public class TrezorDeviceManager implements UsbServicesListener {
     try {
       Message response = trezorDevice.sendMessage(message);
 
+      // Device is connected if a message gets through
+      deviceContext.setDeviceState(DEVICE_CONNECTED);
+
+      // Update context before event notification
+      if (response instanceof TrezorMessageManagement.Features) {
+        deviceContext.setFeatures((TrezorMessageManagement.Features) response);
+      }
+
       // Notify listeners
       TrezorEvents.notify(new TrezorEvent(this, response));
 
       return response;
 
     } catch (InvalidProtocolBufferException e) {
+      // Device has failed if a message fails
+      deviceContext.setDeviceState(DEVICE_FAILED);
       throw new TrezorException("Message sending failed.", e);
     }
   }

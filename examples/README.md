@@ -24,3 +24,8 @@ It is also used to reset the overall state of the device back to an entry state.
 The `wipe` message results in a factory reset of the device and is the simplest message that
 involves multiple state transitions involving user confirmation and screen requests from the
 application.
+
+After a successful factory reset the `features` message is null.
+
+## Create Wallet
+

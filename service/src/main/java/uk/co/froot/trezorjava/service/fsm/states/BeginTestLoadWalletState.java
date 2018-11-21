@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.service.fsm;
+package uk.co.froot.trezorjava.service.fsm.states;
 
 import com.google.protobuf.Message;
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
@@ -9,7 +9,7 @@ import uk.co.froot.trezorjava.core.events.TrezorEvent;
 /**
  * The device needs to return to the initialized state, cancelling any current operation.
  */
-public class BeginWipeDeviceState extends AbstractManagementState {
+public class BeginTestLoadWalletState extends AbstractManagementState {
 
   @Override
   public void doEnter(TrezorDeviceManager deviceManager) {

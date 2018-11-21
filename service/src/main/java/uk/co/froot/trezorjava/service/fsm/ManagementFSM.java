@@ -6,6 +6,8 @@ import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;
 import uk.co.froot.trezorjava.core.events.TrezorEventListener;
 import uk.co.froot.trezorjava.core.events.TrezorEvents;
+import uk.co.froot.trezorjava.service.fsm.states.DetachedState;
+import uk.co.froot.trezorjava.service.fsm.states.ManagementState;
 
 /**
  * A finite state machine (FSM) to handle Trezor device management use cases.

@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.service.fsm;
+package uk.co.froot.trezorjava.service.fsm.states;
 
 import hw.trezor.messages.common.MessagesCommon;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
@@ -27,7 +27,9 @@ public class ConfirmWipeDeviceState extends AbstractManagementState {
   @Override
   public ManagementState lookupStateByEvent(TrezorEvent event) {
 
-    // TODO Determine appropriate events
+    if (event.getMessage() instanceof MessagesCommon.Success) {
+      return new InitializedState();
+    }
     return this;
   }
 }

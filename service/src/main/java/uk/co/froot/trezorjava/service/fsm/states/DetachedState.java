@@ -1,12 +1,12 @@
-package uk.co.froot.trezorjava.service.fsm;
+package uk.co.froot.trezorjava.service.fsm.states;
 
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;
 
 /**
- * The device has been attached and low level communications established.
+ * The device has been detached and low level communication has ceased.
  */
-public class AttachedState extends AbstractManagementState {
+public class DetachedState extends AbstractManagementState {
   @Override
   public void doEnter(TrezorDeviceManager deviceManager) {
     // Do nothing

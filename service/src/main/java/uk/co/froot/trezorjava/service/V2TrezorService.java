@@ -4,9 +4,11 @@ import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
-import uk.co.froot.trezorjava.service.fsm.BeginWipeDeviceState;
-import uk.co.froot.trezorjava.service.fsm.InitializedState;
 import uk.co.froot.trezorjava.service.fsm.ManagementFSM;
+import uk.co.froot.trezorjava.service.fsm.specifications.WalletSpecification;
+import uk.co.froot.trezorjava.service.fsm.states.BeginTestLoadWalletState;
+import uk.co.froot.trezorjava.service.fsm.states.BeginWipeDeviceState;
+import uk.co.froot.trezorjava.service.fsm.states.InitializedState;
 
 /**
  * <p>Service to provide the following to application:</p>
@@ -137,34 +139,31 @@ public class V2TrezorService implements TrezorService {
 //
 //  }
 //
-//  /**
-//   * <p>Initiate the process where the hardware wallet is first wiped then loaded using an external seed phrase</p>
-//   * <h3>This is an insecure method for creating a wallet. DO NOT USE IN PRODUCTION.</h3>
-//   *
-//   * @param language   The language (e.g. "english")
-//   * @param label      The label to display below the logo (e.g "Fred")
-//   * @param seedPhrase The seed phrase provided by the user in the clear
-//   * @param pin        The personal identification number (PIN) in the clear
-//   */
-//  public void loadWallet(
-//    String language,
-//    String label,
-//    String seedPhrase,
-//    String pin
-//  ) {
-//
-//    // Create the specification
-//    LoadWalletSpecification specification = new LoadWalletSpecification(
-//      language,
-//      label,
-//      seedPhrase,
-//      pin
-//    );
-//
-//    // Set the FSM context
-//    context.beginLoadWallet(specification);
-//
-//  }
+  /**
+   * <p>Initiate the process where the hardware wallet is first wiped then loaded using an external seed phrase</p>
+   * <h3>This is an insecure method for creating a wallet. DO NOT USE IN PRODUCTION.</h3>
+   *
+   * @param language   The language (e.g. "english").
+   * @param seedPhrase The seed phrase provided by the user in the clear.
+   * @param pin        The personal identification number (PIN) in the clear.
+   */
+  public void testLoadWallet(
+    String language,
+    String seedPhrase,
+    String pin
+  ) {
+
+    // Create the specification
+    WalletSpecification specification = new WalletSpecification(
+      language,
+      seedPhrase,
+      pin
+    );
+
+    // Start the wipe device use case
+    managementFSM.transitionTo(new BeginTestLoadWalletState());
+
+  }
 //
 //  /**
 //   * <p>Provide the user entered PIN</p>

@@ -1,4 +1,4 @@
-package uk.co.froot.trezorjava.service.fsm;
+package uk.co.froot.trezorjava.service.fsm.states;
 
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.core.events.TrezorEvent;

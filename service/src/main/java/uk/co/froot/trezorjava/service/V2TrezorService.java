@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.froot.trezorjava.core.TrezorDeviceManager;
 import uk.co.froot.trezorjava.service.fsm.ManagementFSM;
-import uk.co.froot.trezorjava.service.fsm.specifications.WalletSpecification;
+import uk.co.froot.trezorjava.core.specifications.WalletSpecification;
 import uk.co.froot.trezorjava.service.fsm.states.BeginTestLoadWalletState;
 import uk.co.froot.trezorjava.service.fsm.states.BeginWipeDeviceState;
 import uk.co.froot.trezorjava.service.fsm.states.InitializedState;
@@ -159,6 +159,8 @@ public class V2TrezorService implements TrezorService {
       seedPhrase,
       pin
     );
+
+    deviceManager.context().setWalletSpecification(specification);
 
     // Start the wipe device use case
     managementFSM.transitionTo(new BeginTestLoadWalletState());

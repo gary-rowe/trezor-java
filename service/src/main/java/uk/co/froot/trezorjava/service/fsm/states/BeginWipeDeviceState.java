@@ -14,7 +14,7 @@ public class BeginWipeDeviceState extends AbstractManagementState {
   @Override
   public void doEnter(TrezorDeviceManager deviceManager) {
 
-    // Send the Initialize message to the device
+    // Send the WipeDevice message to the device
     TrezorMessageManagement.WipeDevice message = TrezorMessageManagement.WipeDevice.newBuilder().build();
     deviceManager.sendMessage(message);
 

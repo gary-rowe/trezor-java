@@ -1,6 +1,7 @@
 package uk.co.froot.trezorjava.core;
 
 import com.satoshilabs.trezor.lib.protobuf.TrezorMessageManagement;
+import uk.co.froot.trezorjava.core.specifications.WalletSpecification;
 
 import static uk.co.froot.trezorjava.core.TrezorDeviceState.DEVICE_ATTACHED;
 import static uk.co.froot.trezorjava.core.TrezorDeviceState.DEVICE_DETACHED;
@@ -15,6 +16,7 @@ public class TrezorContext {
   private volatile TrezorMessageManagement.Features features = null;
   private volatile TrezorDeviceState deviceState = DEVICE_DETACHED;
   private volatile TrezorUIState uiState = TrezorUIState.SHOW_DEVICE_DETACHED;
+  private WalletSpecification walletSpecification;
 
   /**
    * Clear all fields back to a detached state.
@@ -92,5 +94,20 @@ public class TrezorContext {
    */
   public TrezorMessageManagement.Features getFeatures() {
     return features;
+  }
+
+  /**
+   *
+   * @param walletSpecification The wallet specification to apply.
+   */
+  public void setWalletSpecification(WalletSpecification walletSpecification) {
+    this.walletSpecification = walletSpecification;
+  }
+
+  /**
+   * @return The current wallet specification
+   */
+  public WalletSpecification getWalletSpecification() {
+    return walletSpecification;
   }
 }
